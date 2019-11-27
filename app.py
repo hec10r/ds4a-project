@@ -1,177 +1,155 @@
-import os
-import pandas as pd
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.graph_objects as go
-import dash_table
-import constants
+import pandas as pd
+import numpy as np
+
 from dash.dependencies import Input, Output
-from sqlalchemy import create_engine
+from plotly import graph_objs as go
+from plotly.graph_objs import *
+from datetime import datetime as dt
+
+import geopandas as gpd
+
+import os
+import plotly.graph_objects as go
+
+import settings
+import db_functions
 
 
-db_host = os.environ.get('HOST')
-db_name = os.environ.get('DB_NAME')
-db_user = os.environ.get('DB_USER')
-db_password = os.environ.get('DB_PASS')
-
-connection_string = f'postgresql://{db_user}:{db_password}@{db_host}/{db_name}'
-engine = create_engine(connection_string)
-
-# df = pd.read_sql('select * from table', engine.connect())
-
-app = dash.Dash(__name__,meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1.0"}],)
+app = dash.Dash(
+    __name__, meta_tags=[{"name": "viewport", "content": "width=device-width"}]
+)
+server = app.server
 
 
-def build_graph_title(title):
-    return html.P(className="graph-title", children=title)
+df_crime = db_functions.load_crime_data()
+df = db_functions.load_barrio_dane()
+df_crime_type = df_crime['crimen'].drop_duplicates().reset_index(drop=False)
+df_years = df_crime['date_year'].drop_duplicates().reset_index(drop=False).sort_values(by='date_year', ascending=True)
+
+geojson = db_functions.load_baq_polyg()
 
 
+#df["Date/Time"] = pd.to_datetime(df["Date/Time"], format="%Y-%m-%d %H:%M")
+#df.index = df["Date/Time"]
+#df.drop("Date/Time", 1, inplace=True)
+totalList = []
+#for month in df.groupby(df.index.month):
+#    dailyList = []
+#    for day in month[1].groupby(month[1].index.day):
+#        dailyList.append(day[1])
+#    totalList.append(dailyList)
+#totalList = np.array(totalList)
+
+# Layout of Dash App
 app.layout = html.Div(
     children=[
         html.Div(
-            id="top-row",
+            className="row",
             children=[
+                # Column for user controls
                 html.Div(
-                    className="row",
-                    id="top-row-header",
+                    className="four columns div-user-controls",
                     children=[
+                        html.H2("Barranquilla - Atlántico"),
+                        html.H2("Crimenes 2010 - 2019"),
+                        html.P(
+                            """Seleccione el año y el tipo de crimen que desea consultar"""
+                        ),
                         html.Div(
-                            id="header-container",
-                            # children=[
-                            #     build_banner(),
-                            #     html.P(
-                            #         id="instructions",
-                            #         children="Select data points from the well map, ternary map or bar graph to "
-                            #         "visualize cross-filtering to other plots. Selection could be done by "
-                            #         "clicking on individual data points or using the lasso tool to capture "
-                            #         "multiple data points or bars. With the box tool from modebar, multiple "
-                            #         "regions can be selected by holding the SHIFT key while clicking and "
-                            #         "dragging.",
-                            #     ),
-                            #     build_graph_title("Select Operator"),
-                            #     dcc.Dropdown(
-                            #         id="operator-select",
-                            #         options=[
-                            #             {"label": i, "value": i}
-                            #             for i in df["op"].unique().tolist()
-                            #         ],
-                            #         multi=True,
-                            #         value=[
-                            #             df["op"].unique().tolist()[0],
-                            #             df["op"].unique().tolist()[1],
-                            #         ],
-                            #     ),
-                            # ],
-                        )
-                    ],
-                ),
-                html.Div(
-                    className="row",
-                    id="top-row-graphs",
-                    children=[
-                        # Well map
-                        html.Div(
-                            id="well-map-container",
+                            className="div-for-dropdown",
                             children=[
-                                build_graph_title("Well Map"),
-                                dcc.RadioItems(
-                                    id="mapbox-view-selector",
+                                dcc.Dropdown(
+                                    id='bar-selector',
                                     options=[
-                                        {"label": "basic", "value": "basic"},
-                                        {"label": "satellite", "value": "satellite"},
-                                        {"label": "outdoors", "value": "outdoors"},
-                                        {
-                                            "label": "satellite-street",
-                                            "value": "mapbox://styles/mapbox/satellite-streets-v9",
-                                        },
+                                        {'label': year, 'value': year} 
+                                        for year in df_years['date_year']
                                     ],
-                                    value="basic",
-                                ),
-                                dcc.Graph(
-                                    id="well-map",
-                                    figure={
-                                        "layout": {
-                                            "paper_bgcolor": "#192444",
-                                            "plot_bgcolor": "#192444",
-                                        }
-                                    },
-                                    config={"scrollZoom": True, "displayModeBar": True},
-                                ),
+                                    multi=True,
+                                    placeholder="Periodo",
+                                )
                             ],
                         ),
-                        # Ternary map
+                        # Change to side-by-side for mobile layout
                         html.Div(
-                            id="ternary-map-container",
+                            className="row",
                             children=[
                                 html.Div(
-                                    id="ternary-header",
+                                    className="div-for-dropdown",
                                     children=[
-                                        build_graph_title(
-                                            "Shale Mineralogy Composition"
-                                        ),
-                                        dcc.Checklist(
-                                            id="ternary-layer-select",
+                                        # Dropdown for crime types
+                                        dcc.Dropdown(
+                                            id='location-dropdown',
                                             options=[
-                                                {
-                                                    "label": "Well Data",
-                                                    "value": "Well Data",
-                                                },
-                                                {
-                                                    "label": "Rock Type",
-                                                    "value": "Rock Type",
-                                                },
+                                                {'label': crimen, 'value': crimen} 
+                                                for crimen in df_crime_type['crimen']
                                             ],
-                                            value=["Well Data", "Rock Type"],
-                                        ),
+                                            multi=True,
+                                            placeholder="Tipo de crimen",
+                                        )
                                     ],
                                 ),
-                                dcc.Graph(
-                                    id="ternary-map",
-                                    figure={
-                                        "layout": {
-                                            "paper_bgcolor": "#192444",
-                                            "plot_bgcolor": "#192444",
-                                        }
-                                    },
-                                    config={
-                                        "scrollZoom": True,
-                                        "displayModeBar": False,
-                                    },
+                                html.Div(
+                                    className="div-for-dropdown",
+                                    children=[
+                                        # Dropdown to select times
+
+                                    ],
                                 ),
                             ],
                         ),
+                        html.P(id="total-rides"),
+                        html.P(id="total-rides-selection"),
+                        html.P(id="date-value"),
+                    ],
+                ),
+                # Column for app graphs and plots
+                html.Div(
+                    className="eight columns div-for-charts bg-grey",
+                    children=[
+                        dcc.Graph(
+                            id='baq-maps',
+                            figure={
+                                'data': [
+                                    go.Choroplethmapbox(
+                                        geojson=geojson,
+                                        locations=df['setu_ccnct'],
+                                        z=df['dane_area_m2'],
+                                        colorscale='Viridis',
+                                        colorbar_title="Área (m2)"
+                                    )
+                                ],
+                                'layout': 
+                                    go.Layout(
+                                        autosize=True,
+                                        margin=go.layout.Margin(l=0, r=35, t=0, b=0),
+                                        showlegend=False,                                        
+                                        paper_bgcolor='rgba(0,0,0,0)',
+                                        plot_bgcolor='rgba(0,0,0,0)',                                      
+                                        mapbox_style=settings.mapbox_style,
+                                        mapbox_accesstoken=settings.mapbox_access_token,
+                                        mapbox_zoom=10,
+                                        mapbox_center = settings.BAQ_CENTER_COORD,
+                                    ),
+                                    
+                            }
+
+                        ),
+                        html.Div(
+                            className="text-padding",
+                            children=[
+                                "Select any of the bars on the histogram to section data by time."
+                            ],
+                        ),
+                        #dcc.Graph(id="histogram"),
                     ],
                 ),
             ],
-        ),
-        html.Div(
-            className="row",
-            id="bottom-row",
-            children=[
-                # Formation bar plots
-                html.Div(
-                    id="form-bar-container",
-                    className="six columns",
-                    children=[
-                        build_graph_title("Well count by formations"),
-                        dcc.Graph(id="form-by-bar"),
-                    ],
-                ),
-                html.Div(
-                    # Selected well productions
-                    id="well-production-container",
-                    className="six columns",
-                    children=[
-                        build_graph_title("Individual well annual production"),
-                        dcc.Graph(id="production-fig"),
-                    ],
-                ),
-            ],
-        ),
+        )
     ]
 )
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run_server(debug=True)
