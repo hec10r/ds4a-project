@@ -91,11 +91,14 @@
 
 .Select--single > .Select-control .Select-value, .Select-placeholder {
     background-color: #1f2c56;
+    font-size: 10px;
 }
 
 .Select--multi .Select-value-label, .Select--multi .Select-value {
     color: #3c81e8;
     background-color: #dfecff;
+    font-size: 10px;
+    -webkit-appearance: none;
 }
 
 .Select-arrow {
