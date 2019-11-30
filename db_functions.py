@@ -42,21 +42,14 @@ def filter_crime(df_crime, crime_type, years):
         crime_type = []
 
     df_crime_filtered = df_crime.copy()
-    if (len(crime_type) == 0 or len(years) == 0):
-        if ( len(crime_type) == 0 and len(years) != 0):
-            filter = (  df_crime_filtered['date_year'].isin(years)  )
-        elif (len(crime_type) != 0 and len(years) == 0):
-            filter = ( df_crime_filtered['crimen'].isin(crime_type) )
-        else:
-            filter = None
-    else:
-        filter = ( df_crime_filtered['crimen'].isin(crime_type)  ) & (df_crime_filtered['date_year'].isin(years)  )
     
-    if (filter is not None):
-        df_crime_filtered = df_crime_filtered[filter]
+    df_barrios_personas = df_crime_filtered[['barrio_id', 'barrio', 'total_personas']].drop_duplicates()
 
+    filter = ( df_crime_filtered['date_year'].isin(years) | (len(years) == 0) ) & ((df_crime_filtered['crimen'].isin(crime_type)) | (len(crime_type) == 0) )
+
+    df_crime_filtered = df_crime_filtered[filter]
     df_crime_filtered = df_crime_filtered.groupby('barrio_id').agg({'barrio':'count'}).reset_index(drop=False).rename(columns={'barrio':'total'})
-
-    print(df_crime_filtered)
+    df_crime_filtered = pd.merge(df_crime_filtered, df_barrios_personas, on='barrio_id', how='left')   
+    df_crime_filtered['crime_ratio'] = df_crime_filtered['total'] / df_crime_filtered['total_personas']
 
     return df_crime_filtered

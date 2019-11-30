@@ -90,9 +90,6 @@
 }
 
 .Select--single > .Select-control .Select-value, .Select-placeholder {
-    border: 1px solid white;
-    border-radius: 4px;
-    color: white;
     background-color: #1f2c56;
 }
 
