@@ -7,8 +7,8 @@ import settings
 
 engine = create_engine(f'postgresql://{settings.DB_USER}:{settings.DB_PASS}@{settings.DB_HOST}/{settings.DB_NAME}')
 
-def load_crime_data():
-    if os.path.exists('data/crime.csv'):
+def load_crime_data(load_from_db=False):
+    if (os.path.exists('data/crime.csv') and (not load_from_db)):
         df_crime = pd.read_csv('data/crime.csv', sep=',')
     else:
         df_crime = pd.read_sql("SELECT * FROM vw_crime", engine.connect() )

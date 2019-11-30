@@ -29,7 +29,8 @@ a {
   background-color: #31302F;
 }
 .text-padding{
-  padding: 5px;
+  padding: 3px;
+  font-size: 10px;
 }
 /* Graph Layout ––––––––––––––––––––––––––––––––––––––––––––––––––*/
 .div-for-charts{

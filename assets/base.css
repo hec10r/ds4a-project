@@ -64,7 +64,7 @@ Taken from https://codepen.io/chriddyp/pen/bWLwgP.css
         width: 39.3333333333%;
    }
     .six.columns {
-        width: 48%;
+        width: 49%;
    }
     .seven.columns {
         width: 56.6666666667%;
@@ -144,7 +144,7 @@ Taken from https://codepen.io/chriddyp/pen/bWLwgP.css
     font-size: 62.5%;
   }
   body {
-    font-size: 1.5em;
+    font-size: 1em;
    /* currently ems cause chrome bug misinterpreting rems on body element */
     line-height: 1.6;
     font-weight: 400;
@@ -225,7 +225,7 @@ Taken from https://codepen.io/chriddyp/pen/bWLwgP.css
     padding: 0 30px;
     color: #555;
     text-align: center;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     line-height: 38px;
     letter-spacing: .1rem;
@@ -389,4 +389,9 @@ Taken from https://codepen.io/chriddyp/pen/bWLwgP.css
   }
   /* Larger than Desktop HD */
   @media (min-width: 1200px) {
+  }
+
+  .column_fifty_perc {
+    float: left;
+    width: 50%;
   }
