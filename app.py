@@ -9,8 +9,30 @@ import pandas as pd
 import numpy as np
 
 import settings
-import db_functions
+from db_functions import *
 import json
+
+
+tabs_styles = {
+    'height': '30px'
+}
+tab_style = {
+    'borderBottom': '1px solid #d6d6d6',
+    'padding': '6px',
+    'fontWeight': 'bold',
+    'backgroundColor': '#31302F',
+    'font-color': '#F4FCFA',
+    'font-size' : '10px'
+}
+
+tab_selected_style = {
+    'borderTop': '1px solid #d6d6d6',
+    'borderBottom': '1px solid #d6d6d6',
+    'backgroundColor': '#1f2c56',
+    'color': 'white',
+    'padding': '6px',
+    'font-size' : '10px'
+}
 
 
 app = dash.Dash(
@@ -19,12 +41,11 @@ app = dash.Dash(
 server = app.server
 
 
-df_crime = db_functions.load_crime_data()
-df_barrio = db_functions.load_barrio_dane()
-df_crime_type = db_functions.load_crime_type(df_crime)
-df_years = db_functions.load_years(df_crime)
-geo_json = db_functions.load_baq_polyg()
-
+df_crime = load_crime_data()
+df_barrio = load_barrio_dane()
+df_crime_type = load_crime_type(df_crime)
+df_years = load_years(df_crime)
+geo_json = load_baq_polyg()
 
 # Layout of Dash App
 app.layout = html.Div(
@@ -36,11 +57,7 @@ app.layout = html.Div(
                 html.Div(
                     className="four columns div-user-controls",
                     children=[
-                        html.H1("Barranquilla - Atlántico"),
-                        html.H2("Crimenes 2010 - 2019"),
-                        html.P(
-                            """Seleccione el año y el tipo de crimen que desea consultar"""
-                        ),
+                        html.H2("Crimenes en Barranquilla"),
                         html.Div(
                             className="div-for-dropdown",
                             children=[
@@ -88,16 +105,84 @@ app.layout = html.Div(
                 html.Div(
                     className="eight columns div-for-charts bg-grey",
                     children=[
-                        dcc.Graph(
-                            id='baq-maps'
-                        ),
-                        html.Div(
-                            className="text-padding",
+                        dcc.Tabs(
+                            id="tabs-styled-with-inline",
+                            style=tabs_styles,
+                            value='tab-1', 
                             children=[
-                                "Select any of the bars on the histogram to section data by time."
-                            ],
+                                dcc.Tab(
+                                    label='Mapa', 
+                                    value='tab-1',
+                                    style=tab_style, 
+                                    selected_style=tab_selected_style,
+                                    children=[
+                                        dcc.Graph(
+                                            id='baq-maps'
+                                        ),
+                                        html.Div(
+                                            className='row',
+                                            children=[
+                                                html.Div(
+                                                    className='column_fifty_perc',
+                                                    children=[
+                                                        dcc.Graph(id="histogram1")
+                                                    ]
+                                                ),
+                                                html.Div(
+                                                    className='column_fifty_perc',
+                                                    children=[
+                                                        dcc.Graph(id="histogram2")
+                                                    ]
+                                                )
+                                            ]
+                                        )
+                                    ]
+                                ),
+                                dcc.Tab(
+                                    label='Más información',
+                                    value='tab-2',
+                                    style=tab_style, 
+                                    selected_style=tab_selected_style,
+                                    children=[
+                                        html.Div(
+                                            className='row',
+                                            children=[
+                                                html.Div(
+                                                    className='column_fifty_perc',
+                                                    children=[
+                                                        dcc.Graph(id="histogram3")
+                                                    ]
+                                                ),
+                                                html.Div(
+                                                    className='column_fifty_perc',
+                                                    children=[
+                                                        dcc.Graph(id="histogram4")
+                                                    ]
+                                                )
+                                            ]
+                                        ),
+                                        html.Div(
+                                            className='row',
+                                            children=[
+                                                html.Div(
+                                                    className='column_fifty_perc',
+                                                    children=[
+                                                        dcc.Graph(id="histogram5", className="fifty_percent")
+                                                    ]
+                                                ),
+                                                html.Div(
+                                                    className='column_fifty_perc',
+                                                    children=[
+                                                        dcc.Graph(id="histogram6", className="fifty_percent")
+                                                    ]
+                                                )
+                                            ]
+                                        )
+                                    ]
+                                ),
+                            ]
                         ),
-                        #dcc.Graph(id="histogram"),
+                        html.Div(id='tabs-content-inline'),
                     ],
                 ),
             ],
@@ -105,22 +190,29 @@ app.layout = html.Div(
     ]
 )
 @app.callback(
-    dash.dependencies.Output('baq-maps', 'figure'),
+    [
+        dash.dependencies.Output('baq-maps', 'figure'),
+        dash.dependencies.Output('histogram1', 'figure'),
+        dash.dependencies.Output('histogram2', 'figure'),
+    ],
     [
         dash.dependencies.Input('crimetype-dropdown', 'value'),
         dash.dependencies.Input('year-selector', 'value'),
     ]
 )
 def update_map(crime_type, years):
-    df_crime_filtered = db_functions.filter_crime(df_crime, crime_type, years)
-
+    n_of_records = 10
+    df_crime_filtered = filter_crime(df_crime, crime_type, years)
+    df_crime_sorted_by_ratio = df_crime_filtered.sort_values(by='crime_ratio', ascending=False)
+    df_crime_sorted_by_total = df_crime_filtered.sort_values(by='total', ascending=False)
     return {
         'data': [ go.Choroplethmapbox(
                         geojson=geo_json,
-                        locations=df_barrio['setu_ccnct'],
-                        z=df_barrio['dane_area_m2'],
-                        colorscale='Viridis',
-                        colorbar_title="Indicar metrica"
+                        locations=df_crime_filtered['barrio_id'],
+                        z=df_crime_filtered['total'],
+                        colorscale='blues',
+                        colorbar_title="Indicar metrica",
+                        text=df_crime_filtered['barrio']
                     )
                 ],
         'layout': go.Layout(
@@ -131,7 +223,37 @@ def update_map(crime_type, years):
                         mapbox_zoom=11,
                         mapbox_center = settings.BAQ_CENTER_COORD,
                     ),
+    }, {
+        'data': [
+            {'x': df_crime_sorted_by_ratio['barrio'].head(n_of_records), 'y': df_crime_sorted_by_ratio['crime_ratio'].head(n_of_records), 'type': 'bar'}
+        ],
+        'layout': {
+            'plot_bgcolor': '#323130',
+            'paper_bgcolor':'#323130',
+            'font': {
+                'color': '#FFFFFF'
+            },
+            'title': {
+                'text': 'Top 5 de Barrios - Crimen vs Población',
+            }
+        }
+    }, {
+        'data': [
+            {'x': df_crime_sorted_by_total['barrio'].head(n_of_records), 'y': df_crime_sorted_by_total['total'].head(n_of_records), 'type': 'bar'}
+        ],
+        'layout': {
+            'plot_bgcolor': '#323130',
+            'paper_bgcolor':'#323130',
+            'font': {
+                'color': '#FFFFFF'
+            },
+            'title': {
+                'text': 'Top 5 de Barrios - Total crimenes',
+            }
+        }
     }
 
+
+
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=True, host='0.0.0.0')
