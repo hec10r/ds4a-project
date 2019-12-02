@@ -211,3 +211,7 @@ a {
   margin: 0 0 0 0;
   background-color: #252e3f;
 } 
+
+.Select-input input {
+  color:white;
+}

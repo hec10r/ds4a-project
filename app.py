@@ -12,10 +12,6 @@ import settings
 from db_functions import *
 import json
 
-
-tabs_styles = {
-    'height': '30px'
-}
 tab_style = {
     'borderBottom': '1px solid #d6d6d6',
     'padding': '6px',
@@ -47,6 +43,7 @@ df_crime_type = load_crime_type(df_crime)
 df_years = load_years(df_crime)
 geo_json = load_baq_polyg()
 
+
 # Layout of Dash App
 app.layout = html.Div(
     children=[
@@ -55,31 +52,45 @@ app.layout = html.Div(
             children=[
                 # Column for user controls
                 html.Div(
-                    className="four columns div-user-controls",
+                    className="navbar",
                     children=[
-                        html.H2("Crimenes en Barranquilla"),
                         html.Div(
-                            className="div-for-dropdown",
+                            className="open-slide",
                             children=[
-                                dcc.Dropdown(
-                                    id='year-selector',
-                                    options=[
-                                        {'label': year, 'value': year} 
-                                        for year in df_years['date_year']
-                                    ],
-                                    multi=True,
-                                    placeholder="Periodo",
-                                )
-                            ],
+                                html.Button('☰',  id='btn_open_slide')
+                            ]
                         ),
-                        # Change to side-by-side for mobile layout
                         html.Div(
-                            className="row",
+                            "Criminalidad en Barranquilla (2010-2019)",
+                            className="navbar-nav"
+                        )
+                    ],
+                ),
+                html.Div(
+                    id="side-menu",
+                    className="side-nav",
+                    children=[
+                        html.Button("×",  className="btn-close", id='btn_close_slide'),
+                        html.Div(
+                            className="row", 
                             children=[
                                 html.Div(
                                     className="div-for-dropdown",
                                     children=[
-                                        # Dropdown for crime types
+                                        dcc.Dropdown(
+                                            id='year-selector',
+                                            options=[
+                                                {'label': year, 'value': year} 
+                                                for year in df_years['date_year']
+                                            ],
+                                            multi=True,
+                                            placeholder="Periodo",
+                                        )
+                                    ]
+                                ),
+                                html.Div(
+                                    className="div-for-dropdown",
+                                    children=[
                                         dcc.Dropdown(
                                             id='crimetype-dropdown',
                                             options=[
@@ -89,106 +100,134 @@ app.layout = html.Div(
                                             multi=True,
                                             placeholder="Tipo de crimen",
                                         )
-                                    ],
-                                ),
-                                html.Div(
-                                    className="div-for-dropdown",
-                                    children=[
-                                        # Dropdown to select times
-                                    ],
-                                ),
-                            ],
-                        ),
-                    ],
+                                    ]
+                                )
+                            ]
+                        )
+                    ]
                 ),
                 # Column for app graphs and plots
                 html.Div(
-                    className="eight columns div-for-charts bg-grey",
+                    id='main',
                     children=[
-                        dcc.Tabs(
-                            id="tabs-styled-with-inline",
-                            style=tabs_styles,
-                            value='tab-1', 
+                        html.Div(
+                            className="eight columns div-for-charts bg-grey",
                             children=[
-                                dcc.Tab(
-                                    label='Mapa', 
-                                    value='tab-1',
-                                    style=tab_style, 
-                                    selected_style=tab_selected_style,
+                                dcc.Tabs(
+                                    id="tabs-styled-with-inline",
+                                    style={
+                                        'height': '30px'
+                                    },
+                                    value='tab-1', 
                                     children=[
-                                        dcc.Graph(
-                                            id='baq-maps'
-                                        ),
-                                        html.Div(
-                                            className='row',
+                                        dcc.Tab(
+                                            label='Mapa', 
+                                            value='tab-1',
+                                            style=tab_style, 
+                                            selected_style=tab_selected_style,
                                             children=[
-                                                html.Div(
-                                                    className='column_fifty_perc',
-                                                    children=[
-                                                        dcc.Graph(id="histogram1")
-                                                    ]
+                                                dcc.Graph(
+                                                    id='baq-maps'
                                                 ),
                                                 html.Div(
-                                                    className='column_fifty_perc',
+                                                    className='row',
                                                     children=[
-                                                        dcc.Graph(id="histogram2")
-                                                    ]
-                                                )
-                                            ]
-                                        )
-                                    ]
-                                ),
-                                dcc.Tab(
-                                    label='Más información',
-                                    value='tab-2',
-                                    style=tab_style, 
-                                    selected_style=tab_selected_style,
-                                    children=[
-                                        html.Div(
-                                            className='row',
-                                            children=[
-                                                html.Div(
-                                                    className='column_fifty_perc',
-                                                    children=[
-                                                        dcc.Graph(id="histogram3")
-                                                    ]
-                                                ),
-                                                html.Div(
-                                                    className='column_fifty_perc',
-                                                    children=[
-                                                        dcc.Graph(id="histogram4")
+                                                        html.Div(
+                                                            className='column_fifty_perc',
+                                                            children=[
+                                                                dcc.Graph(id="histogram1")
+                                                            ]
+                                                        ),
+                                                        html.Div(
+                                                            className='column_fifty_perc',
+                                                            children=[
+                                                                dcc.Graph(id="histogram2")
+                                                            ]
+                                                        )
                                                     ]
                                                 )
                                             ]
                                         ),
-                                        html.Div(
-                                            className='row',
+                                        dcc.Tab(
+                                            label='Más información',
+                                            value='tab-2',
+                                            style=tab_style, 
+                                            selected_style=tab_selected_style,
                                             children=[
                                                 html.Div(
-                                                    className='column_fifty_perc',
+                                                    className='row',
                                                     children=[
-                                                        dcc.Graph(id="histogram5", className="fifty_percent")
+                                                        html.Div(
+                                                            className='column_fifty_perc',
+                                                            children=[
+                                                                dcc.Graph(id="histogram3")
+                                                            ]
+                                                        ),
+                                                        html.Div(
+                                                            className='column_fifty_perc',
+                                                            children=[
+                                                                dcc.Graph(id="histogram4")
+                                                            ]
+                                                        )
                                                     ]
                                                 ),
                                                 html.Div(
-                                                    className='column_fifty_perc',
+                                                    className='row',
                                                     children=[
-                                                        dcc.Graph(id="histogram6", className="fifty_percent")
+                                                        html.Div(
+                                                            className='column_fifty_perc',
+                                                            children=[
+                                                                dcc.Graph(id="histogram5", className="fifty_percent")
+                                                            ]
+                                                        ),
+                                                        html.Div(
+                                                            className='column_fifty_perc',
+                                                            children=[
+                                                                dcc.Graph(id="histogram6", className="fifty_percent")
+                                                            ]
+                                                        )
                                                     ]
                                                 )
                                             ]
-                                        )
+                                        ),
                                     ]
                                 ),
+                                html.Div(id='tabs-content-inline'),
                             ]
-                        ),
-                        html.Div(id='tabs-content-inline'),
+                        )
+                        
+                        
                     ],
                 ),
             ],
         )
     ]
 )
+@app.callback (
+    [
+        dash.dependencies.Output('side-menu', 'style'),
+        dash.dependencies.Output('main', 'style'),
+    ],
+    [
+        dash.dependencies.Input('btn_open_slide', 'n_clicks'),
+        dash.dependencies.Input('btn_close_slide', 'n_clicks')
+    ]
+)
+def open_close_sidebar(n_clicks1, n_clicks2):
+    style_menu = {}
+    style_main = {}
+    if (n_clicks1 is None): n_clicks1 = 0
+    if (n_clicks2 is None): n_clicks2 = 0
+
+    if (n_clicks1 == n_clicks2):
+        style_menu = {'width': '0'}
+        style_main = {'margin-left': '0'}
+    else: 
+        style_menu = {'width': '250px'}
+        style_main = {'margin-left': '250px'}
+
+    return style_menu, style_main
+
 @app.callback(
     [
         dash.dependencies.Output('baq-maps', 'figure'),

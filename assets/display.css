@@ -91,6 +91,7 @@
 
 .Select--single > .Select-control .Select-value, .Select-placeholder {
     background-color: #1f2c56;
+    color: white;
     font-size: 10px;
 }
 
