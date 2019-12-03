@@ -43,13 +43,25 @@ def filter_crime(df_crime, crime_type, years):
 
     df_crime_filtered = df_crime.copy()
     
-    df_barrios_personas = df_crime_filtered[['barrio_id', 'barrio', 'total_personas']].drop_duplicates()
+    #df_barrios_personas = df_crime_filtered[['barrio_id', 'barrio', 'total_personas']].drop_duplicates()
 
     filter = ( df_crime_filtered['date_year'].isin(years) | (len(years) == 0) ) & ((df_crime_filtered['crimen'].isin(crime_type)) | (len(crime_type) == 0) )
-
     df_crime_filtered = df_crime_filtered[filter]
-    df_crime_filtered = df_crime_filtered.groupby('barrio_id').agg({'barrio':'count'}).reset_index(drop=False).rename(columns={'barrio':'total'})
-    df_crime_filtered = pd.merge(df_crime_filtered, df_barrios_personas, on='barrio_id', how='left')   
-    df_crime_filtered['crime_ratio'] = df_crime_filtered['total'] / df_crime_filtered['total_personas']
 
-    return df_crime_filtered
+    df_crimes_by_barrio = get_crimes_by_barrio( df_crime_filtered )
+
+    df_crimes_by_crimetype_and_year = get_crimes_by_crimetype_and_year( df_crime_filtered )
+
+    return df_crimes_by_barrio, df_crimes_by_crimetype_and_year
+
+def get_crimes_by_barrio( df ):
+    df = df.groupby(['barrio_id', 'barrio']).agg({'crimen':'count', 'total_personas':'max'}).reset_index(drop=False)
+    df.columns = ['barrio_id', 'barrio', 'total', 'total_personas']
+    df['crime_ratio'] = df['total'] / df['total_personas']
+
+    return df
+
+def get_crimes_by_crimetype_and_year( df ): 
+    df = df.groupby(['crimen', 'date_year']).agg({'barrio': 'count'}).reset_index(drop=False)
+    df.columns = ['crimen', 'year', 'total']
+    return df

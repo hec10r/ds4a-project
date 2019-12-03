@@ -15,7 +15,6 @@ import json
 tab_style = {
     'borderBottom': '1px solid #d6d6d6',
     'padding': '6px',
-    'fontWeight': 'bold',
     'backgroundColor': '#31302F',
     'font-color': '#F4FCFA',
     'font-size' : '10px'
@@ -23,9 +22,10 @@ tab_style = {
 
 tab_selected_style = {
     'borderTop': '1px solid #d6d6d6',
+    'fontWeight': 'bold',
     'borderBottom': '1px solid #d6d6d6',
-    'backgroundColor': '#1f2c56',
-    'color': 'white',
+    'backgroundColor': 'rgba(255, 255, 255, 0.637)',
+    'color': 'black',
     'padding': '6px',
     'font-size' : '10px'
 }
@@ -126,8 +126,27 @@ app.layout = html.Div(
                                             style=tab_style, 
                                             selected_style=tab_selected_style,
                                             children=[
-                                                dcc.Graph(
-                                                    id='baq-maps'
+                                                html.Div(
+                                                    className='row',
+                                                    children=[
+                                                        html.Div(
+                                                            children=[
+                                                                dcc.Graph(
+                                                                    id='baq-maps'
+                                                                )
+                                                            ]
+                                                        )                                            
+                                                    ]
+                                                ),
+                                                html.Div(
+                                                    className='row',
+                                                    children=[
+                                                        html.Div(
+                                                            children=[
+                                                                dcc.Graph(id="histogram0")
+                                                            ]
+                                                        )
+                                                    ]
                                                 ),
                                                 html.Div(
                                                     className='row',
@@ -195,8 +214,6 @@ app.layout = html.Div(
                                 html.Div(id='tabs-content-inline'),
                             ]
                         )
-                        
-                        
                     ],
                 ),
             ],
@@ -231,6 +248,7 @@ def open_close_sidebar(n_clicks1, n_clicks2):
 @app.callback(
     [
         dash.dependencies.Output('baq-maps', 'figure'),
+        dash.dependencies.Output('histogram0', 'figure'),
         dash.dependencies.Output('histogram1', 'figure'),
         dash.dependencies.Output('histogram2', 'figure'),
     ],
@@ -241,17 +259,22 @@ def open_close_sidebar(n_clicks1, n_clicks2):
 )
 def update_map(crime_type, years):
     n_of_records = 10
-    df_crime_filtered = filter_crime(df_crime, crime_type, years)
-    df_crime_sorted_by_ratio = df_crime_filtered.sort_values(by='crime_ratio', ascending=False)
-    df_crime_sorted_by_total = df_crime_filtered.sort_values(by='total', ascending=False)
+    df_crimes_by_barrio, df_crimes_by_crimetype_and_year = filter_crime(df_crime, crime_type, years)
+    
+    return create_map(df_crimes_by_barrio),\
+           create_line_chart_by_crimetype_and_year(df_crimes_by_crimetype_and_year),\
+           create_bar_chart_top_barrios_by_ratio(df_crimes_by_barrio, n_of_records),\
+           create_bar_chart_top_barrios_total_crimen(df_crimes_by_barrio, n_of_records)
+
+def create_map( df ):
     return {
         'data': [ go.Choroplethmapbox(
                         geojson=geo_json,
-                        locations=df_crime_filtered['barrio_id'],
-                        z=df_crime_filtered['total'],
+                        locations=df['barrio_id'],
+                        z=df['total'],
                         colorscale='blues',
                         colorbar_title="Indicar metrica",
-                        text=df_crime_filtered['barrio']
+                        text=df['barrio']
                     )
                 ],
         'layout': go.Layout(
@@ -262,36 +285,53 @@ def update_map(crime_type, years):
                         mapbox_zoom=11,
                         mapbox_center = settings.BAQ_CENTER_COORD,
                     ),
-    }, {
-        'data': [
-            {'x': df_crime_sorted_by_ratio['barrio'].head(n_of_records), 'y': df_crime_sorted_by_ratio['crime_ratio'].head(n_of_records), 'type': 'bar'}
-        ],
-        'layout': {
-            'plot_bgcolor': '#323130',
-            'paper_bgcolor':'#323130',
-            'font': {
-                'color': '#FFFFFF'
-            },
-            'title': {
-                'text': 'Top 5 de Barrios - Crimen vs Población',
-            }
-        }
-    }, {
-        'data': [
-            {'x': df_crime_sorted_by_total['barrio'].head(n_of_records), 'y': df_crime_sorted_by_total['total'].head(n_of_records), 'type': 'bar'}
-        ],
-        'layout': {
-            'plot_bgcolor': '#323130',
-            'paper_bgcolor':'#323130',
-            'font': {
-                'color': '#FFFFFF'
-            },
-            'title': {
-                'text': 'Top 5 de Barrios - Total crimenes',
-            }
-        }
     }
 
+def create_line_chart_by_crimetype_and_year( df ):
+    data = []
+    crime_lst = list(set(df["crimen"]))
+    for c in crime_lst:
+        data.append(go.Scatter(x=df[df['crimen']==c]['year'], y=df[df['crimen']==c]['total'], name=c))
+
+    return {
+        'data' : data,
+        'layout': go.Layout(
+                        plot_bgcolor='#323130',
+                        paper_bgcolor='#323130',
+                        font_color='#FFFFFF',
+                        title='Crimenes a lo largo del tiempo',
+                        xaxis=dict(tickmode='linear', dtick=1
+                    )
+        ) 
+    }
+
+def create_bar_chart_top_barrios_total_crimen(df, n_of_records):
+    df = df.sort_values(by='total', ascending=False)
+    return {
+        'data': [
+            {'x': df['barrio'].head(n_of_records), 'y': df['total'].head(n_of_records), 'type': 'bar'}
+        ],
+        'layout': go.Layout(
+                        plot_bgcolor='#323130',
+                        paper_bgcolor='#323130',
+                        font_color='#FFFFFF',
+                        title='Top 5 de Barrios - Total crimenes'
+                    )
+    }
+
+def create_bar_chart_top_barrios_by_ratio(df, n_of_records):
+    df = df.sort_values(by='crime_ratio', ascending=False)
+    return {
+        'data': [
+            {'x': df['barrio'].head(n_of_records), 'y': df['crime_ratio'].head(n_of_records), 'type': 'bar'}
+        ],
+        'layout': go.Layout(
+                        plot_bgcolor='#323130',
+                        paper_bgcolor='#323130',
+                        font_color='#FFFFFF',
+                        title='Top 5 de Barrios - Crimen vs Población'
+                    )
+    }
 
 
 if __name__ == "__main__":

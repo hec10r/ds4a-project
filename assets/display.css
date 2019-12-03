@@ -37,7 +37,7 @@
 /* Top-row-header
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 #top-row-header {
-    background-color: #1f2c56;
+    background-color: rgb(49, 48, 47);
     padding: 6rem 3rem 9rem 3rem;
 }
 
@@ -72,7 +72,7 @@
 }
 
 .Select-control, .Select-multi-value-wrapper, .Select-menu-outer div {
-    background-color: #1f2c56;
+    background-color: rgb(49, 48, 47);
 }
 
 .Select-control, .Select, .Select-value-label, .Select-clear-zone {
@@ -80,7 +80,7 @@
 }
 
 .Select-menu-outer {
-    background-color: #1f2c56;
+    background-color: rgb(49, 48, 47);
     border: 1px solid gray !important;
 }
 
@@ -90,7 +90,7 @@
 }
 
 .Select--single > .Select-control .Select-value, .Select-placeholder {
-    background-color: #1f2c56;
+    background-color: rgb(49, 48, 47);
     color: white;
     font-size: 10px;
 }
@@ -107,7 +107,7 @@
 }
 
 .Select-arrow-zone, .Select-clear-zone, .is-open > .Select-control {
-    background-color: #1f2c56 !important;
+    background-color: rgb(49, 48, 47) !important;
 }
 
 #selected-rows .Select-multi-value-wrapper, #selected-columns .Select-multi-value-wrapper {
