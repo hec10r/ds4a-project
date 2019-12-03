@@ -34,25 +34,32 @@ def load_years(df_crime):
 def load_crime_type(df_crime):
     return df_crime['crimen'].drop_duplicates().reset_index(drop=False)
 
+def load_localidad(df_crime):
+    return df_crime['localidad'].drop_duplicates().reset_index(drop=False).sort_values(by='localidad', ascending=True)
 
-def filter_crime(df_crime, crime_type, years):
+def filter_crime(df_crime, crime_type, years, borough):
     if years is None: 
         years = []
     if crime_type is None:
         crime_type = []
-
+    if borough is None:
+        borough = []
+    
     df_crime_filtered = df_crime.copy()
     
-    #df_barrios_personas = df_crime_filtered[['barrio_id', 'barrio', 'total_personas']].drop_duplicates()
-
-    filter = ( df_crime_filtered['date_year'].isin(years) | (len(years) == 0) ) & ((df_crime_filtered['crimen'].isin(crime_type)) | (len(crime_type) == 0) )
+    filter = ( df_crime_filtered['date_year'].isin(years) | (len(years) == 0) ) &\
+             ((df_crime_filtered['crimen'].isin(crime_type)) | (len(crime_type) == 0) ) &\
+             ((df_crime_filtered['localidad'].isin(borough)) | (len(borough) == 0))
+             
     df_crime_filtered = df_crime_filtered[filter]
 
+
     df_crimes_by_barrio = get_crimes_by_barrio( df_crime_filtered )
-
     df_crimes_by_crimetype_and_year = get_crimes_by_crimetype_and_year( df_crime_filtered )
+    df_crimes_by_localidad = get_crimes_by_localidad( df_crime_filtered )
+    df_crimes_by_localidad_and_year = get_crimes_by_localidad_and_year( df_crime_filtered )
 
-    return df_crimes_by_barrio, df_crimes_by_crimetype_and_year
+    return df_crimes_by_barrio, df_crimes_by_crimetype_and_year, df_crimes_by_localidad, df_crimes_by_localidad_and_year
 
 def get_crimes_by_barrio( df ):
     df = df.groupby(['barrio_id', 'barrio']).agg({'crimen':'count', 'total_personas':'max'}).reset_index(drop=False)
@@ -61,7 +68,18 @@ def get_crimes_by_barrio( df ):
 
     return df
 
+def get_crimes_by_localidad( df ):
+    df = df.groupby(['localidad']).agg({'crimen':'count'}).reset_index(drop=False)
+    df.columns = ['localidad', 'total']
+    return df
+
+
 def get_crimes_by_crimetype_and_year( df ): 
     df = df.groupby(['crimen', 'date_year']).agg({'barrio': 'count'}).reset_index(drop=False)
     df.columns = ['crimen', 'year', 'total']
+    return df
+
+def get_crimes_by_localidad_and_year( df ):
+    df = df.groupby(['localidad', 'date_year']).agg({'barrio': 'count'}).reset_index(drop=False)
+    df.columns = ['localidad', 'year', 'total']
     return df

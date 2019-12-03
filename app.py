@@ -38,9 +38,10 @@ server = app.server
 
 
 df_crime = load_crime_data()
-df_barrio = load_barrio_dane()
 df_crime_type = load_crime_type(df_crime)
 df_years = load_years(df_crime)
+df_localidad = load_localidad(df_crime)
+
 geo_json = load_baq_polyg()
 
 
@@ -61,8 +62,11 @@ app.layout = html.Div(
                             ]
                         ),
                         html.Div(
-                            "Criminalidad en Barranquilla (2010-2019)",
-                            className="navbar-nav"
+                            className="navbar-nav",
+                            children=[
+                                html.Img(id='logo', src=app.get_asset_url("img/window.png"), className='navbar-nav', style={"text-align": "right"}),
+                                html.P("Criminalidad en Barranquilla (2010-2019) - Team 4 - BAQ", className='navbar-nav')
+                            ]
                         )
                     ],
                 ),
@@ -78,7 +82,7 @@ app.layout = html.Div(
                                     className="div-for-dropdown",
                                     children=[
                                         dcc.Dropdown(
-                                            id='year-selector',
+                                            id='year-dropdown',
                                             options=[
                                                 {'label': year, 'value': year} 
                                                 for year in df_years['date_year']
@@ -101,7 +105,21 @@ app.layout = html.Div(
                                             placeholder="Tipo de crimen",
                                         )
                                     ]
-                                )
+                                ),
+                                html.Div(
+                                    className="div-for-dropdown",
+                                    children=[
+                                        dcc.Dropdown(
+                                            id='borough-dropdown',
+                                            options=[
+                                                {'label': localidad, 'value': localidad} 
+                                                for localidad in df_localidad['localidad']
+                                            ],
+                                            multi=True,
+                                            placeholder='Localidad',
+                                        )
+                                    ]
+                                )                                
                             ]
                         )
                     ]
@@ -121,7 +139,7 @@ app.layout = html.Div(
                                     value='tab-1', 
                                     children=[
                                         dcc.Tab(
-                                            label='Mapa', 
+                                            label='Información general', 
                                             value='tab-1',
                                             style=tab_style, 
                                             selected_style=tab_selected_style,
@@ -145,30 +163,13 @@ app.layout = html.Div(
                                                             children=[
                                                                 dcc.Graph(id="histogram0")
                                                             ]
-                                                        )
+                                                        )                                                      
                                                     ]
-                                                ),
-                                                html.Div(
-                                                    className='row',
-                                                    children=[
-                                                        html.Div(
-                                                            className='column_fifty_perc',
-                                                            children=[
-                                                                dcc.Graph(id="histogram1")
-                                                            ]
-                                                        ),
-                                                        html.Div(
-                                                            className='column_fifty_perc',
-                                                            children=[
-                                                                dcc.Graph(id="histogram2")
-                                                            ]
-                                                        )
-                                                    ]
-                                                )
+                                                )                                                
                                             ]
                                         ),
                                         dcc.Tab(
-                                            label='Más información',
+                                            label='Localidades',
                                             value='tab-2',
                                             style=tab_style, 
                                             selected_style=tab_selected_style,
@@ -177,30 +178,42 @@ app.layout = html.Div(
                                                     className='row',
                                                     children=[
                                                         html.Div(
-                                                            className='column_fifty_perc',
+                                                            className='column_thirtythree_perc',
                                                             children=[
-                                                                dcc.Graph(id="histogram3")
+                                                                dcc.Graph(id="histogram1")
                                                             ]
                                                         ),
                                                         html.Div(
-                                                            className='column_fifty_perc',
+                                                            className='column_thirtythree_perc',
                                                             children=[
-                                                                dcc.Graph(id="histogram4")
+                                                                dcc.Graph(id="histogram2")
                                                             ]
-                                                        )
+                                                        ),                                                        
+                                                        html.Div(
+                                                            className='column_thirtythree_perc',
+                                                            children=[
+                                                                dcc.Graph(id="histogram3")
+                                                            ]
+                                                        )                                                        
                                                     ]
                                                 ),
                                                 html.Div(
                                                     className='row',
                                                     children=[
                                                         html.Div(
-                                                            className='column_fifty_perc',
+                                                            className='column_thirtythree_perc',
                                                             children=[
-                                                                dcc.Graph(id="histogram5", className="fifty_percent")
+                                                                dcc.Graph(id="histogram4")
                                                             ]
                                                         ),
                                                         html.Div(
-                                                            className='column_fifty_perc',
+                                                            className='column_thirtythree_perc',
+                                                            children=[
+                                                                dcc.Graph(id="histogram5", className="fifty_percent")
+                                                            ]
+                                                        ),                                                      
+                                                        html.Div(
+                                                            className='column_thirtythree_perc',
                                                             children=[
                                                                 dcc.Graph(id="histogram6", className="fifty_percent")
                                                             ]
@@ -209,6 +222,60 @@ app.layout = html.Div(
                                                 )
                                             ]
                                         ),
+                                        dcc.Tab(
+                                            label='Barrios',
+                                            value='tab-3',
+                                            style=tab_style, 
+                                            selected_style=tab_selected_style,
+                                            children=[
+                                                html.Div(
+                                                    className='row',
+                                                    children=[
+                                                        html.Div(
+                                                            className='column_thirtythree_perc',
+                                                            children=[
+                                                                dcc.Graph(id="histogram7")
+                                                            ]
+                                                        ),
+                                                        html.Div(
+                                                            className='column_thirtythree_perc',
+                                                            children=[
+                                                                dcc.Graph(id="histogram8")
+                                                            ]
+                                                        ),                                                        
+                                                        html.Div(
+                                                            className='column_thirtythree_perc',
+                                                            children=[
+                                                                dcc.Graph(id="histogram9")
+                                                            ]
+                                                        )                                                        
+                                                    ]
+                                                ),
+                                                html.Div(
+                                                    className='row',
+                                                    children=[
+                                                        html.Div(
+                                                            className='column_thirtythree_perc',
+                                                            children=[
+                                                                dcc.Graph(id="histogram10")
+                                                            ]
+                                                        ),
+                                                        html.Div(
+                                                            className='column_thirtythree_perc',
+                                                            children=[
+                                                                dcc.Graph(id="histogram11", className="fifty_percent")
+                                                            ]
+                                                        ),                                                      
+                                                        html.Div(
+                                                            className='column_thirtythree_perc',
+                                                            children=[
+                                                                dcc.Graph(id="histogram12", className="fifty_percent")
+                                                            ]
+                                                        )
+                                                    ]
+                                                )
+                                            ]
+                                        )
                                     ]
                                 ),
                                 html.Div(id='tabs-content-inline'),
@@ -251,20 +318,28 @@ def open_close_sidebar(n_clicks1, n_clicks2):
         dash.dependencies.Output('histogram0', 'figure'),
         dash.dependencies.Output('histogram1', 'figure'),
         dash.dependencies.Output('histogram2', 'figure'),
+        dash.dependencies.Output('histogram7', 'figure'),
+        dash.dependencies.Output('histogram8', 'figure'),
     ],
     [
         dash.dependencies.Input('crimetype-dropdown', 'value'),
-        dash.dependencies.Input('year-selector', 'value'),
-    ]
+        dash.dependencies.Input('year-dropdown', 'value'),
+        dash.dependencies.Input('borough-dropdown', 'value'),
+    ] 
 )
-def update_map(crime_type, years):
+def update_map(crime_type, years, borough):
     n_of_records = 10
-    df_crimes_by_barrio, df_crimes_by_crimetype_and_year = filter_crime(df_crime, crime_type, years)
+    df_crimes_by_barrio, df_crimes_by_crimetype_and_year,\
+    df_crimes_by_localidad, df_crimes_by_localidad_and_year = filter_crime(df_crime, crime_type, years, borough)
     
+
     return create_map(df_crimes_by_barrio),\
            create_line_chart_by_crimetype_and_year(df_crimes_by_crimetype_and_year),\
+           create_bar_chart_by_localidad(df_crimes_by_localidad),\
+           create_line_chart_by_localidad_and_year(df_crimes_by_localidad_and_year),\
            create_bar_chart_top_barrios_by_ratio(df_crimes_by_barrio, n_of_records),\
            create_bar_chart_top_barrios_total_crimen(df_crimes_by_barrio, n_of_records)
+           
 
 def create_map( df ):
     return {
@@ -278,8 +353,7 @@ def create_map( df ):
                     )
                 ],
         'layout': go.Layout(
-                        autosize=True,
-                        margin=go.layout.Margin(l=0, r=35, t=0, b=0),
+                        margin=go.layout.Margin(l=0, r=0, t=0, b=0),
                         mapbox_style=settings.mapbox_style,
                         mapbox_accesstoken=settings.mapbox_access_token,
                         mapbox_zoom=11,
@@ -303,6 +377,37 @@ def create_line_chart_by_crimetype_and_year( df ):
                         xaxis=dict(tickmode='linear', dtick=1
                     )
         ) 
+    }
+
+def create_line_chart_by_localidad_and_year( df ):
+    data = []
+    localidad_lst = list(set(df["localidad"]))
+    for loc in localidad_lst:
+        data.append(go.Scatter(x=df[df['localidad']==loc]['year'], y=df[df['localidad']==loc]['total'], name=loc))
+
+    return {
+        'data' : data,
+        'layout': go.Layout(
+                        plot_bgcolor='#323130',
+                        paper_bgcolor='#323130',
+                        font_color='#FFFFFF',
+                        title='Crimenes por localidad a través del tiempo',
+                        xaxis=dict(tickmode='linear', dtick=1)
+                    )
+    }
+
+def create_bar_chart_by_localidad( df ):
+    df = df.sort_values(by='total', ascending=False)
+    return {
+        'data': [
+            {'x': df['localidad'], 'y': df['total'], 'type': 'bar'}
+        ],
+        'layout': go.Layout(
+                        plot_bgcolor='#323130',
+                        paper_bgcolor='#323130',
+                        font_color='#FFFFFF',
+                        title='Crimenes por localidades'
+                    )
     }
 
 def create_bar_chart_top_barrios_total_crimen(df, n_of_records):
