@@ -50,22 +50,29 @@ def filter_crime(df_crime, crime_type, years, borough):
     filter = ( df_crime_filtered['date_year'].isin(years) | (len(years) == 0) ) &\
              ((df_crime_filtered['crimen'].isin(crime_type)) | (len(crime_type) == 0) ) &\
              ((df_crime_filtered['localidad'].isin(borough)) | (len(borough) == 0))
-             
+
     df_crime_filtered = df_crime_filtered[filter]
 
+    #print(df_crime_filtered['date_dow'])
 
     df_crimes_by_barrio = get_crimes_by_barrio( df_crime_filtered )
     df_crimes_by_crimetype_and_year = get_crimes_by_crimetype_and_year( df_crime_filtered )
     df_crimes_by_localidad = get_crimes_by_localidad( df_crime_filtered )
     df_crimes_by_localidad_and_year = get_crimes_by_localidad_and_year( df_crime_filtered )
+    df_crimes_by_localidad_and_weekday = get_crimes_by_localidad_and_weekday( df_crime_filtered )
 
-    return df_crimes_by_barrio, df_crimes_by_crimetype_and_year, df_crimes_by_localidad, df_crimes_by_localidad_and_year
+    return df_crimes_by_barrio, df_crimes_by_crimetype_and_year, df_crimes_by_localidad, df_crimes_by_localidad_and_year, df_crimes_by_localidad_and_weekday
 
 def get_crimes_by_barrio( df ):
     df = df.groupby(['barrio_id', 'barrio']).agg({'crimen':'count', 'total_personas':'max'}).reset_index(drop=False)
     df.columns = ['barrio_id', 'barrio', 'total', 'total_personas']
     df['crime_ratio'] = df['total'] / df['total_personas']
 
+    return df
+
+def get_crimes_by_localidad_and_weekday( df ):
+    df = df.groupby(['localidad', 'date_dow']).agg({'crimen':'count'}).reset_index(drop=False)
+    df.columns = ['localidad', 'dia_semana', 'total']
     return df
 
 def get_crimes_by_localidad( df ):

@@ -1,3 +1,5 @@
+DAYS_OF_THE_WEEK = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo']
+
 # Colors for contour
 ternary_color = [
     "#FFDF7F",

@@ -7,8 +7,11 @@ import plotly.graph_objects as go
 
 import pandas as pd
 import numpy as np
+from datetime import date
+import calendar
 
 import settings
+from constants import *
 from db_functions import *
 import json
 
@@ -318,6 +321,7 @@ def open_close_sidebar(n_clicks1, n_clicks2):
         dash.dependencies.Output('histogram0', 'figure'),
         dash.dependencies.Output('histogram1', 'figure'),
         dash.dependencies.Output('histogram2', 'figure'),
+        dash.dependencies.Output('histogram3', 'figure'),
         dash.dependencies.Output('histogram7', 'figure'),
         dash.dependencies.Output('histogram8', 'figure'),
     ],
@@ -330,16 +334,18 @@ def open_close_sidebar(n_clicks1, n_clicks2):
 def update_map(crime_type, years, borough):
     n_of_records = 10
     df_crimes_by_barrio, df_crimes_by_crimetype_and_year,\
-    df_crimes_by_localidad, df_crimes_by_localidad_and_year = filter_crime(df_crime, crime_type, years, borough)
-    
+    df_crimes_by_localidad, df_crimes_by_localidad_and_year,\
+    df_crimes_by_localidad_weekday = filter_crime(df_crime, crime_type, years, borough)
+
 
     return create_map(df_crimes_by_barrio),\
            create_line_chart_by_crimetype_and_year(df_crimes_by_crimetype_and_year),\
            create_bar_chart_by_localidad(df_crimes_by_localidad),\
            create_line_chart_by_localidad_and_year(df_crimes_by_localidad_and_year),\
+           create_bar_chart_crimes_by_localidad_and_weekday(df_crimes_by_localidad_weekday),\
            create_bar_chart_top_barrios_by_ratio(df_crimes_by_barrio, n_of_records),\
            create_bar_chart_top_barrios_total_crimen(df_crimes_by_barrio, n_of_records)
-           
+          
 
 def create_map( df ):
     return {
@@ -396,6 +402,32 @@ def create_line_chart_by_localidad_and_year( df ):
                     )
     }
 
+def create_bar_chart_crimes_by_localidad_and_weekday( df ):
+    data = []
+
+    df['nombre_dia_semana'] = df['dia_semana'].apply( lambda field: DAYS_OF_THE_WEEK[int(field)] )
+    
+    # localidad_lst = list(set(df["localidad"]))
+    # for loc in localidad_lst:
+    #     data.append(go.Bar(x=df[df['localidad']==loc]['nombre_dia_semana'], y=df[df['localidad']==loc]['total'], name=loc))
+
+    dia_semana_lst = list(set(df["dia_semana"]))
+    for dow in dia_semana_lst:
+        data.append(go.Bar(x=df[df['dia_semana']==dow]['localidad'], y=df[df['dia_semana']==dow]['total'], name=DAYS_OF_THE_WEEK[int(dow)]))
+
+    return {
+        'data' : data,
+        'layout': go.Layout(
+                        plot_bgcolor='#323130',
+                        paper_bgcolor='#323130',
+                        font_color='#FFFFFF',
+                        barmode='group',
+                        title='Crimenes según los días de la semana',
+                        xaxis=dict(tickmode='linear', dtick=1)
+                    )
+    }
+
+
 def create_bar_chart_by_localidad( df ):
     df = df.sort_values(by='total', ascending=False)
     return {
@@ -437,6 +469,7 @@ def create_bar_chart_top_barrios_by_ratio(df, n_of_records):
                         title='Top 5 de Barrios - Crimen vs Población'
                     )
     }
+
 
 
 if __name__ == "__main__":
