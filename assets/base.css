@@ -361,6 +361,11 @@
     width: 33.3%;
   }
 
+  .column_sixtysix_perc {
+    float: left;
+    width: 66%;
+  }  
+
   #baq-maps {
     margin: 0 0 0 0;
     background-color: #252e3f;

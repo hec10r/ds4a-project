@@ -96,6 +96,7 @@ def filter_crime(df_crime, crime_type, years, borough):
     df_crimes_by_holiday = get_crimes_by_holiday( df_crime_filtered )
     df_crimes_by_dow = get_crimes_by_type_of_dow( df_crime_filtered )
 
+
     return df_crime_filtered, df_crimes_by_barrio,\
            df_crimes_by_crimetype_and_year, df_crimes_by_localidad,\
            df_crimes_by_localidad_and_year, df_crimes_by_localidad_and_weekday,\

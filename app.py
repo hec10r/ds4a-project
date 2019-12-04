@@ -1,4 +1,6 @@
 from db_functions import *
+import datetime
+from datetime import datetime as dt
 
 
 app = dash.Dash(
@@ -227,13 +229,13 @@ app.layout = html.Div(
                                                         html.Div(
                                                             className='column_thirtythree_perc',
                                                             children=[
-                                                                dcc.Graph(id="histogram10", className="fifty_percent")
+                                                                dcc.Graph(id="histogram10")
                                                             ]
                                                         ),                                                      
                                                         html.Div(
-                                                            className='column_thirtythree_perc',
+                                                            className='column_sixtysix_perc',
                                                             children=[
-                                                                dcc.Graph(id="histogram11", className="fifty_percent")
+                                                                dcc.Graph(id="histogram11")
                                                             ]
                                                         )
                                                     ]
@@ -284,6 +286,7 @@ def open_close_sidebar(n_clicks1, n_clicks2):
         dash.dependencies.Output('histogram2', 'figure'),
         dash.dependencies.Output('histogram3', 'figure'),
         dash.dependencies.Output('histogram4', 'figure'),
+        dash.dependencies.Output('histogram5', 'figure'),
         dash.dependencies.Output('histogram7', 'figure'),
         dash.dependencies.Output('histogram8', 'figure'),
         dash.dependencies.Output('histogram9', 'figure'),
@@ -293,8 +296,8 @@ def open_close_sidebar(n_clicks1, n_clicks2):
     [
         dash.dependencies.Input('crimetype-dropdown', 'value'),
         dash.dependencies.Input('year-dropdown', 'value'),
-        dash.dependencies.Input('borough-dropdown', 'value'),
-    ] 
+        dash.dependencies.Input('borough-dropdown', 'value')
+    ]
 )
 def update_map(crime_type, years, borough):
     n_of_records = 3
@@ -309,14 +312,13 @@ def update_map(crime_type, years, borough):
            create_line_chart_by_localidad_and_year( df_crimes_by_localidad_and_year ),\
            create_bar_chart_top_barrios_total_crimen( df_crimes_by_barrio, n_of_records ),\
            create_bar_chart_top_barrios_by_ratio( df_crimes_by_barrio, n_of_records ),\
-           create_bar_chart_crimes_by_weekday( df_crime_by_weekday ),\
            create_bar_chart_crimes_by_localidad_and_weekday( df_crimes_by_localidad_weekday ),\
+           create_bar_chart_crimes_by_weekday( df_crime_by_weekday ),\
            create_bar_char_crimes_by_tipodow( df_crimes_by_tipodow ),\
            create_bar_chart_crimes_by_month( df_crimes_by_month ),\
-           create_bar_char_crimes_by_holiday( df_crimes_by_holiday )
-           
+           create_bar_char_crimes_by_holiday( df_crimes_by_holiday ),\
+           create_heatmap(df_filtered)
             
-         
 
 def create_map( df ):
     colors=[ get_color(t) for t in df['impacto'].values]
@@ -484,6 +486,92 @@ def create_bar_chart_top_barrios_by_ratio(df, n_of_records):
         'data': data,
         'layout': getLayout(f'Ratio crimen por población Barrios x Localidad (Top {n_of_records})', tick_angle=-90)
     }
+
+
+def create_heatmap(df):
+    df["fecha_hora"] = df["fecha_hora"].apply(lambda x: dt.strptime(x, "%Y-%m-%d %H:%M:%S"))  # String -> Datetime
+    df["date_horaampm"] = df["fecha_hora"].apply(lambda x: dt.strftime(x, "%I %p"))  # Datetime -> int(hour) + AM/PM
+    df["date_dow"] = df["fecha_hora"].apply(lambda x: dt.strftime(x, "%A"))  # Datetime -> weekday string
+
+    df['numero_crimenes'] = 1
+    df = df.sort_values('fecha_hora').set_index('fecha_hora')
+    
+
+    x_axis = [datetime.time(i).strftime("%I %p") for i in range(24)]  # 24hr time list
+    y_axis = [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday",
+            ]
+
+    # Get z value : sum(number of records) based on x, y,
+
+    z = np.zeros((7, 24))
+    annotations = []
+
+    for ind_y, day in enumerate(y_axis):
+        filtered_day = df[df['date_dow'] == day]
+
+        for ind_x, x_val in enumerate(x_axis):
+            sum_of_record = filtered_day[filtered_day["date_horaampm"] == x_val][
+                'numero_crimenes'
+            ].sum()
+            z[ind_y][ind_x] = sum_of_record
+
+            annotation_dict = dict(
+                showarrow=False,
+                text="<b>" + str(sum_of_record) + "<b>",
+                xref="x",
+                yref="y",
+                x=x_val,
+                y=day,
+                font=dict(family="sans-serif"),
+            )
+
+            annotations.append(annotation_dict)
+
+    # Heatmap
+    hovertemplate = "<b> %{y}  %{x} <br><br> %{z} crimenes"
+
+    data = [
+        dict(
+            x=x_axis,
+            y=y_axis,
+            z=z,
+            type="heatmap",
+            name="",
+            hovertemplate=hovertemplate,
+            showscale=False,
+            colorscale=[[0, "#76858a"], [1, "#2c82ff"]],
+        )
+    ]
+
+    layout = dict(
+        margin=dict(l=70, b=50, t=50, r=50),
+        plot_bgcolor='#323130',
+        paper_bgcolor='#323130',        
+        modebar={"orientation": "v"},
+        font=dict(family="Open Sans", color='#FFFFFF'),
+        annotations=annotations,
+        xaxis=dict(
+            side="top",
+            ticks="",
+            ticklen=2,
+            tickfont=dict(family="sans-serif"),
+            tickcolor="#FFFFFF",
+        ),
+        yaxis=dict(
+            side="left", ticks="", tickfont=dict(family="sans-serif"), ticksuffix=" "
+        ),
+        hovermode="closest",
+        showlegend=False
+    )
+    return {"data": data, "layout": layout}
+
 
 if __name__ == "__main__":
     app.run_server(debug=True, host='0.0.0.0')
