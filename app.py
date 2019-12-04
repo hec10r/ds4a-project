@@ -333,12 +333,12 @@ def open_close_sidebar(n_clicks1, n_clicks2):
 )
 def update_map(crime_type, years, borough):
     n_of_records = 10
-    df_crimes_by_barrio, df_crimes_by_crimetype_and_year,\
+    df_filtered, df_crimes_by_barrio, df_crimes_by_crimetype_and_year,\
     df_crimes_by_localidad, df_crimes_by_localidad_and_year,\
     df_crimes_by_localidad_weekday = filter_crime(df_crime, crime_type, years, borough)
 
 
-    return create_map(df_crimes_by_barrio),\
+    return create_map(df_filtered),\
            create_line_chart_by_crimetype_and_year(df_crimes_by_crimetype_and_year),\
            create_bar_chart_by_localidad(df_crimes_by_localidad),\
            create_line_chart_by_localidad_and_year(df_crimes_by_localidad_and_year),\
@@ -348,15 +348,33 @@ def update_map(crime_type, years, borough):
           
 
 def create_map( df ):
+    colors=[ get_color(t) for t in df['impacto'].values]
     return {
-        'data': [ go.Choroplethmapbox(
-                        geojson=geo_json,
-                        locations=df['barrio_id'],
-                        z=df['total'],
-                        colorscale='blues',
-                        colorbar_title="Indicar metrica",
-                        text=df['barrio']
-                    )
+        'data': [ 
+                # go.Choroplethmapbox(
+                #         geojson=geo_json,
+                #         locations=df['barrio_id'],
+                #         z=df['total'],
+                #         colorscale='blues',
+                #         colorbar_title="Indicar metrica",
+                #         text=df['barrio']
+                #     )
+                    go.Scattermapbox(
+                     lat=df['latitud'], 
+                     lon=df['longitud'], 
+                     mode='markers' ,
+                     marker= dict(
+                        color=colors,
+                        colorscale=[
+                            [0, "#21c7ef"],
+                            [0.33, "#76f2ff"],
+                            [0.66, "#ff6969"],
+                            [1, "#ff1717"],
+                        ],
+                        size=(df['impacto']**2)/10),
+                     opacity=0.8,
+                     #colorscale = [[0,'rgb(255, 255, 0)'],[1,'rgb(255, 0, 0)']],
+                    ),
                 ],
         'layout': go.Layout(
                         margin=go.layout.Margin(l=0, r=0, t=0, b=0),

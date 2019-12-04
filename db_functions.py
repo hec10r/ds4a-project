@@ -52,16 +52,15 @@ def filter_crime(df_crime, crime_type, years, borough):
              ((df_crime_filtered['localidad'].isin(borough)) | (len(borough) == 0))
 
     df_crime_filtered = df_crime_filtered[filter]
-
-    #print(df_crime_filtered['date_dow'])
-
+    
+    #print(df_crime_filtered.head())
     df_crimes_by_barrio = get_crimes_by_barrio( df_crime_filtered )
     df_crimes_by_crimetype_and_year = get_crimes_by_crimetype_and_year( df_crime_filtered )
     df_crimes_by_localidad = get_crimes_by_localidad( df_crime_filtered )
     df_crimes_by_localidad_and_year = get_crimes_by_localidad_and_year( df_crime_filtered )
     df_crimes_by_localidad_and_weekday = get_crimes_by_localidad_and_weekday( df_crime_filtered )
 
-    return df_crimes_by_barrio, df_crimes_by_crimetype_and_year, df_crimes_by_localidad, df_crimes_by_localidad_and_year, df_crimes_by_localidad_and_weekday
+    return df_crime_filtered, df_crimes_by_barrio, df_crimes_by_crimetype_and_year, df_crimes_by_localidad, df_crimes_by_localidad_and_year, df_crimes_by_localidad_and_weekday
 
 def get_crimes_by_barrio( df ):
     df = df.groupby(['barrio_id', 'barrio']).agg({'crimen':'count', 'total_personas':'max'}).reset_index(drop=False)
@@ -90,3 +89,12 @@ def get_crimes_by_localidad_and_year( df ):
     df = df.groupby(['localidad', 'date_year']).agg({'barrio': 'count'}).reset_index(drop=False)
     df.columns = ['localidad', 'year', 'total']
     return df
+
+def get_color(impact):
+    thresholds = [3, 5, 7, 9, 11]
+    colors = ["#21c7ef", "#76f2ff", "#76f2ff", "#ff6969", "#ff1717"]
+    for threshold, color in zip(thresholds, colors):
+        if impact < threshold:
+            return color
+    #return a defalut color if impact value is not in thresholds
+    return "#21c7ef" 
