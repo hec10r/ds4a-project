@@ -1,37 +1,4 @@
-import dash
-import dash_core_components as dcc
-import dash_html_components as html
-from dash.dependencies import Input, Output
-from plotly import graph_objs as go
-import plotly.graph_objects as go
-
-import pandas as pd
-import numpy as np
-from datetime import date
-import calendar
-
-import settings
-from constants import *
 from db_functions import *
-import json
-
-tab_style = {
-    'borderBottom': '1px solid #d6d6d6',
-    'padding': '6px',
-    'backgroundColor': '#31302F',
-    'font-color': '#F4FCFA',
-    'font-size' : '10px'
-}
-
-tab_selected_style = {
-    'borderTop': '1px solid #d6d6d6',
-    'fontWeight': 'bold',
-    'borderBottom': '1px solid #d6d6d6',
-    'backgroundColor': 'rgba(255, 255, 255, 0.637)',
-    'color': 'black',
-    'padding': '6px',
-    'font-size' : '10px'
-}
 
 
 app = dash.Dash(
@@ -46,7 +13,6 @@ df_years = load_years(df_crime)
 df_localidad = load_localidad(df_crime)
 
 geo_json = load_baq_polyg()
-
 
 # Layout of Dash App
 app.layout = html.Div(
@@ -91,6 +57,7 @@ app.layout = html.Div(
                                                 for year in df_years['date_year']
                                             ],
                                             multi=True,
+                                            value=[2018, 2019],
                                             placeholder="Periodo",
                                         )
                                     ]
@@ -172,7 +139,7 @@ app.layout = html.Div(
                                             ]
                                         ),
                                         dcc.Tab(
-                                            label='Localidades',
+                                            label='Localidades y Barrios',
                                             value='tab-2',
                                             style=tab_style, 
                                             selected_style=tab_selected_style,
@@ -226,7 +193,7 @@ app.layout = html.Div(
                                             ]
                                         ),
                                         dcc.Tab(
-                                            label='Barrios',
+                                            label='Época y hora',
                                             value='tab-3',
                                             style=tab_style, 
                                             selected_style=tab_selected_style,
@@ -245,13 +212,13 @@ app.layout = html.Div(
                                                             children=[
                                                                 dcc.Graph(id="histogram8")
                                                             ]
-                                                        ),                                                        
+                                                        ),
                                                         html.Div(
                                                             className='column_thirtythree_perc',
                                                             children=[
                                                                 dcc.Graph(id="histogram9")
                                                             ]
-                                                        )                                                        
+                                                        )                            
                                                     ]
                                                 ),
                                                 html.Div(
@@ -260,19 +227,13 @@ app.layout = html.Div(
                                                         html.Div(
                                                             className='column_thirtythree_perc',
                                                             children=[
-                                                                dcc.Graph(id="histogram10")
-                                                            ]
-                                                        ),
-                                                        html.Div(
-                                                            className='column_thirtythree_perc',
-                                                            children=[
-                                                                dcc.Graph(id="histogram11", className="fifty_percent")
+                                                                dcc.Graph(id="histogram10", className="fifty_percent")
                                                             ]
                                                         ),                                                      
                                                         html.Div(
                                                             className='column_thirtythree_perc',
                                                             children=[
-                                                                dcc.Graph(id="histogram12", className="fifty_percent")
+                                                                dcc.Graph(id="histogram11", className="fifty_percent")
                                                             ]
                                                         )
                                                     ]
@@ -322,8 +283,12 @@ def open_close_sidebar(n_clicks1, n_clicks2):
         dash.dependencies.Output('histogram1', 'figure'),
         dash.dependencies.Output('histogram2', 'figure'),
         dash.dependencies.Output('histogram3', 'figure'),
+        dash.dependencies.Output('histogram4', 'figure'),
         dash.dependencies.Output('histogram7', 'figure'),
         dash.dependencies.Output('histogram8', 'figure'),
+        dash.dependencies.Output('histogram9', 'figure'),
+        dash.dependencies.Output('histogram10', 'figure'),
+        dash.dependencies.Output('histogram11', 'figure'),
     ],
     [
         dash.dependencies.Input('crimetype-dropdown', 'value'),
@@ -332,20 +297,26 @@ def open_close_sidebar(n_clicks1, n_clicks2):
     ] 
 )
 def update_map(crime_type, years, borough):
-    n_of_records = 10
+    n_of_records = 3
     df_filtered, df_crimes_by_barrio, df_crimes_by_crimetype_and_year,\
     df_crimes_by_localidad, df_crimes_by_localidad_and_year,\
-    df_crimes_by_localidad_weekday = filter_crime(df_crime, crime_type, years, borough)
-
-
+    df_crimes_by_localidad_weekday, df_crime_by_weekday,\
+    df_crimes_by_month, df_crimes_by_holiday, df_crimes_by_tipodow = filter_crime(df_crime, crime_type, years, borough)
+    
     return create_map(df_filtered),\
-           create_line_chart_by_crimetype_and_year(df_crimes_by_crimetype_and_year),\
-           create_bar_chart_by_localidad(df_crimes_by_localidad),\
-           create_line_chart_by_localidad_and_year(df_crimes_by_localidad_and_year),\
-           create_bar_chart_crimes_by_localidad_and_weekday(df_crimes_by_localidad_weekday),\
-           create_bar_chart_top_barrios_by_ratio(df_crimes_by_barrio, n_of_records),\
-           create_bar_chart_top_barrios_total_crimen(df_crimes_by_barrio, n_of_records)
-          
+           create_line_chart_by_crimetype_and_year( df_crimes_by_crimetype_and_year ),\
+           create_bar_chart_by_localidad( df_crimes_by_localidad ),\
+           create_line_chart_by_localidad_and_year( df_crimes_by_localidad_and_year ),\
+           create_bar_chart_top_barrios_total_crimen( df_crimes_by_barrio, n_of_records ),\
+           create_bar_chart_top_barrios_by_ratio( df_crimes_by_barrio, n_of_records ),\
+           create_bar_chart_crimes_by_weekday( df_crime_by_weekday ),\
+           create_bar_chart_crimes_by_localidad_and_weekday( df_crimes_by_localidad_weekday ),\
+           create_bar_char_crimes_by_tipodow( df_crimes_by_tipodow ),\
+           create_bar_chart_crimes_by_month( df_crimes_by_month ),\
+           create_bar_char_crimes_by_holiday( df_crimes_by_holiday )
+           
+            
+         
 
 def create_map( df ):
     colors=[ get_color(t) for t in df['impacto'].values]
@@ -389,60 +360,95 @@ def create_line_chart_by_crimetype_and_year( df ):
     data = []
     crime_lst = list(set(df["crimen"]))
     for c in crime_lst:
-        data.append(go.Scatter(x=df[df['crimen']==c]['year'], y=df[df['crimen']==c]['total'], name=c))
+        df_tmp = df[df['crimen']==c]
+        data.append(go.Scatter(x=df_tmp['period'], y=df_tmp['total'], name=c))
 
     return {
         'data' : data,
-        'layout': go.Layout(
-                        plot_bgcolor='#323130',
-                        paper_bgcolor='#323130',
-                        font_color='#FFFFFF',
-                        title='Crimenes a lo largo del tiempo',
-                        xaxis=dict(tickmode='linear', dtick=1
-                    )
-        ) 
+        'layout': getLayout('Crimenes a lo largo del tiempo', tick_mode='auto')
     }
 
 def create_line_chart_by_localidad_and_year( df ):
     data = []
+
+    # year_lst = sorted(list(set(df["year"])))
+
+    # for year in year_lst:
+    #     data.append(go.Bar( orientation='h', y=df[df['year']==year]['localidad'], x=df[df['year']==year]['total'], name=int(year)))
+
     localidad_lst = list(set(df["localidad"]))
     for loc in localidad_lst:
-        data.append(go.Scatter(x=df[df['localidad']==loc]['year'], y=df[df['localidad']==loc]['total'], name=loc))
+        df_tmp = df[df['localidad']==loc]
+        df_tmp['year'] = df_tmp['year'].apply(lambda field: int(field))
+        data.append(go.Scatter(x=df_tmp['year'], y=df_tmp['total'], name=loc))
 
     return {
         'data' : data,
-        'layout': go.Layout(
-                        plot_bgcolor='#323130',
-                        paper_bgcolor='#323130',
-                        font_color='#FFFFFF',
-                        title='Crimenes por localidad a través del tiempo',
-                        xaxis=dict(tickmode='linear', dtick=1)
-                    )
+        'layout': getLayout('Crimenes por localidad a través del tiempo', tick_angle=-90)
     }
+
 
 def create_bar_chart_crimes_by_localidad_and_weekday( df ):
     data = []
 
     df['nombre_dia_semana'] = df['dia_semana'].apply( lambda field: DAYS_OF_THE_WEEK[int(field)] )
     
-    # localidad_lst = list(set(df["localidad"]))
-    # for loc in localidad_lst:
-    #     data.append(go.Bar(x=df[df['localidad']==loc]['nombre_dia_semana'], y=df[df['localidad']==loc]['total'], name=loc))
+    localidad_lst = list(set(df["localidad"]))
+    for loc in localidad_lst:
+        data.append(go.Bar(x=df[df['localidad']==loc]['nombre_dia_semana'], y=df[df['localidad']==loc]['total'], name=loc))
 
-    dia_semana_lst = list(set(df["dia_semana"]))
-    for dow in dia_semana_lst:
-        data.append(go.Bar(x=df[df['dia_semana']==dow]['localidad'], y=df[df['dia_semana']==dow]['total'], name=DAYS_OF_THE_WEEK[int(dow)]))
+    #dia_semana_lst = list(set(df["dia_semana"]))
+    #for dow in dia_semana_lst:
+    #    data.append(go.Bar(x=df[df['dia_semana']==dow]['localidad'], y=df[df['dia_semana']==dow]['total'], name=DAYS_OF_THE_WEEK[int(dow)]))
 
     return {
         'data' : data,
-        'layout': go.Layout(
-                        plot_bgcolor='#323130',
-                        paper_bgcolor='#323130',
-                        font_color='#FFFFFF',
-                        barmode='group',
-                        title='Crimenes según los días de la semana',
-                        xaxis=dict(tickmode='linear', dtick=1)
-                    )
+        'layout' : getLayout('Crimenes por día de la semana y localidad')
+    }
+
+def create_bar_chart_crimes_by_weekday( df ):
+    data = []
+
+    df['nombre_dia_semana'] = df['dia_semana'].apply( lambda field: DAYS_OF_THE_WEEK[int(field)] )
+    data.append(go.Bar(x=df['nombre_dia_semana'], y=df['total']))
+
+    return {
+        'data' : data,
+        'layout': getLayout('Crimenes por día de la semana')
+    }    
+
+def create_bar_chart_crimes_by_month( df ):
+    data = []
+
+    df['nombre_month'] = df['month'].apply( lambda field: MONTHS[int(field) - 1] )
+    data.append(go.Bar(x=df['nombre_month'], y=df['total']))
+
+    return {
+        'data' : data,
+        'layout': getLayout('Crimenes por mes', tick_angle=-90)
+    }
+
+def create_bar_char_crimes_by_holiday( df ):
+    data = []
+
+    df = df.sort_values(by='total', ascending=False)
+    data.append(go.Bar(x=df['festivo'], y=df['total']))
+
+    return {
+        'data' : data,
+        'layout': getLayout('Crimenes Días Feriados', tick_angle=-90)
+    }
+
+
+
+def create_bar_char_crimes_by_tipodow( df ):
+    data = []
+    df = df.sort_values(by='total', ascending=False)
+    data.append(go.Bar(x=df['festivo'], y=df['total']))
+
+    return {
+        'data' : data,
+        'layout': getLayout('Crimenes por tipo de día')
     }
 
 
@@ -452,43 +458,32 @@ def create_bar_chart_by_localidad( df ):
         'data': [
             {'x': df['localidad'], 'y': df['total'], 'type': 'bar'}
         ],
-        'layout': go.Layout(
-                        plot_bgcolor='#323130',
-                        paper_bgcolor='#323130',
-                        font_color='#FFFFFF',
-                        title='Crimenes por localidades'
-                    )
+        'layout': getLayout('Crimenes por localidades')
     }
 
 def create_bar_chart_top_barrios_total_crimen(df, n_of_records):
-    df = df.sort_values(by='total', ascending=False)
+    data = []
+    localidad_lst = list(set(df["localidad"]))
+    for loc in localidad_lst:
+        df_tmp = df[df['localidad']==loc].head(n_of_records).sort_values(by='total', ascending=False)
+        data.append(go.Bar(x=df_tmp['barrio'], y=df_tmp['total'], name=loc))
+
     return {
-        'data': [
-            {'x': df['barrio'].head(n_of_records), 'y': df['total'].head(n_of_records), 'type': 'bar'}
-        ],
-        'layout': go.Layout(
-                        plot_bgcolor='#323130',
-                        paper_bgcolor='#323130',
-                        font_color='#FFFFFF',
-                        title='Top 5 de Barrios - Total crimenes'
-                    )
+        'data': data,
+        'layout': getLayout(f'Total crimenes Barrios x Localidad (Top {n_of_records})', tick_angle=-90)
     }
 
 def create_bar_chart_top_barrios_by_ratio(df, n_of_records):
-    df = df.sort_values(by='crime_ratio', ascending=False)
+    data = []
+    localidad_lst = list(set(df["localidad"]))
+    for loc in localidad_lst:
+        df_tmp = df[df['localidad']==loc].head(n_of_records).sort_values(by='crime_ratio', ascending=False)
+        data.append(go.Bar(x=df_tmp['barrio'], y=df_tmp['crime_ratio'], name=loc))
+
     return {
-        'data': [
-            {'x': df['barrio'].head(n_of_records), 'y': df['crime_ratio'].head(n_of_records), 'type': 'bar'}
-        ],
-        'layout': go.Layout(
-                        plot_bgcolor='#323130',
-                        paper_bgcolor='#323130',
-                        font_color='#FFFFFF',
-                        title='Top 5 de Barrios - Crimen vs Población'
-                    )
+        'data': data,
+        'layout': getLayout(f'Ratio crimen por población Barrios x Localidad (Top {n_of_records})', tick_angle=-90)
     }
-
-
 
 if __name__ == "__main__":
     app.run_server(debug=True, host='0.0.0.0')
