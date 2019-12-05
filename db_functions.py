@@ -46,6 +46,10 @@ def load_crime_data(load_from_db=False):
     else:
         df_crime = pd.read_sql("SELECT * FROM vw_crime", engine.connect() )
         df_crime.to_csv('data/crime.csv', sep=',', header=True)
+    
+    df_crime['barrio'] = df_crime['barrio'].apply( lambda field: field.capitalize() )
+    df_crime['crimen'] = df_crime['crimen'].apply( lambda field: field.capitalize() )
+
     return df_crime
 
 def load_barrio_dane():
@@ -85,7 +89,7 @@ def filter_crime(df_crime, crime_type, years, borough):
              ((df_crime_filtered['localidad'].isin(borough)) | (len(borough) == 0))
 
     df_crime_filtered = df_crime_filtered[filter]
-    
+
     df_crimes_by_barrio = get_crimes_by_barrio( df_crime_filtered )
     df_crimes_by_crimetype_and_year = get_crimes_by_crimetype_and_year( df_crime_filtered )
     df_crimes_by_localidad = get_crimes_by_localidad( df_crime_filtered )
@@ -95,12 +99,19 @@ def filter_crime(df_crime, crime_type, years, borough):
     df_crimes_by_month = get_crimes_by_month( df_crime_filtered )
     df_crimes_by_holiday = get_crimes_by_holiday( df_crime_filtered )
     df_crimes_by_dow = get_crimes_by_type_of_dow( df_crime_filtered )
+    df_crimes_by_crimetype_and_localidad = get_crimetype_by_localidad( df_crime_filtered )
 
 
-    return df_crime_filtered, df_crimes_by_barrio,\
-           df_crimes_by_crimetype_and_year, df_crimes_by_localidad,\
-           df_crimes_by_localidad_and_year, df_crimes_by_localidad_and_weekday,\
-           df_crimes_by_weekday, df_crimes_by_month, df_crimes_by_holiday,\
+    return df_crime_filtered,\
+           df_crimes_by_barrio,\
+           df_crimes_by_crimetype_and_year,\
+           df_crimes_by_crimetype_and_localidad,\
+           df_crimes_by_localidad,\
+           df_crimes_by_localidad_and_year,\
+           df_crimes_by_localidad_and_weekday,\
+           df_crimes_by_weekday,\
+           df_crimes_by_month,\
+           df_crimes_by_holiday,\
            df_crimes_by_dow
 
 def get_crimes_by_barrio( df ):
@@ -108,6 +119,11 @@ def get_crimes_by_barrio( df ):
     df.columns = ['barrio', 'localidad' ,'total', 'total_personas']
     df['crime_ratio'] =  np.log(df['total']) / np.log(df['total_personas'])
 
+    return df
+
+def get_crimetype_by_localidad( df ): 
+    df = df.groupby(['localidad', 'crimen']).agg({'barrio': 'count'}).reset_index(drop=False) 
+    df.columns = ['localidad', 'crimen', 'total']
     return df
 
 
@@ -192,16 +208,23 @@ def get_color(impact):
     #return a defalut color if impact value is not in thresholds
     return "#21c7ef" 
 
-def getLayout(graph_title, tick_mode='linear', tick_angle='auto'):
-    if ( tick_angle == 'auto' ):
-        x = dict(tickmode=tick_mode, dtick=1)
+def getLayout(graph_title, xtickmode='linear', xtickangle='auto', ytickformat=None, bar_mode=None):
+    if xtickangle == 'auto':
+        x = dict(tickmode=xtickmode, dtick=1)
     else:
-        x = dict(tickmode=tick_mode, dtick=1, tickangle=tick_angle)
+        x = dict(tickmode=xtickmode, dtick=1, tickangle=xtickangle)
+    
+    #if ( ytickformat != '' ):
+    y = dict(tickformat=ytickformat)
+    #else:
+    #    y = None
     
     return go.Layout(
                 plot_bgcolor='#323130',
                 paper_bgcolor='#323130',
                 font_color='#FFFFFF',
                 title=graph_title,
-                xaxis=x
+                xaxis=x,
+                yaxis=y,
+                barmode=bar_mode
             )

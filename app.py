@@ -150,19 +150,19 @@ app.layout = html.Div(
                                                     className='row',
                                                     children=[
                                                         html.Div(
-                                                            className='column_thirtythree_perc',
+                                                            className='column thirtythree_perc',
                                                             children=[
                                                                 dcc.Graph(id="histogram1")
                                                             ]
                                                         ),
                                                         html.Div(
-                                                            className='column_thirtythree_perc',
+                                                            className='column thirtythree_perc',
                                                             children=[
                                                                 dcc.Graph(id="histogram2")
                                                             ]
                                                         ),                                                        
                                                         html.Div(
-                                                            className='column_thirtythree_perc',
+                                                            className='column thirtythree_perc',
                                                             children=[
                                                                 dcc.Graph(id="histogram3")
                                                             ]
@@ -173,19 +173,19 @@ app.layout = html.Div(
                                                     className='row',
                                                     children=[
                                                         html.Div(
-                                                            className='column_thirtythree_perc',
+                                                            className='column thirtythree_perc',
                                                             children=[
                                                                 dcc.Graph(id="histogram4")
                                                             ]
                                                         ),
                                                         html.Div(
-                                                            className='column_thirtythree_perc',
+                                                            className='column thirtythree_perc',
                                                             children=[
                                                                 dcc.Graph(id="histogram5", className="fifty_percent")
                                                             ]
                                                         ),                                                      
                                                         html.Div(
-                                                            className='column_thirtythree_perc',
+                                                            className='column thirtythree_perc',
                                                             children=[
                                                                 dcc.Graph(id="histogram6", className="fifty_percent")
                                                             ]
@@ -204,19 +204,19 @@ app.layout = html.Div(
                                                     className='row',
                                                     children=[
                                                         html.Div(
-                                                            className='column_thirtythree_perc',
+                                                            className='column thirtythree_perc',
                                                             children=[
                                                                 dcc.Graph(id="histogram7")
                                                             ]
                                                         ),
                                                         html.Div(
-                                                            className='column_thirtythree_perc',
+                                                            className='column thirtythree_perc',
                                                             children=[
                                                                 dcc.Graph(id="histogram8")
                                                             ]
                                                         ),
                                                         html.Div(
-                                                            className='column_thirtythree_perc',
+                                                            className='column thirtythree_perc',
                                                             children=[
                                                                 dcc.Graph(id="histogram9")
                                                             ]
@@ -227,15 +227,26 @@ app.layout = html.Div(
                                                     className='row',
                                                     children=[
                                                         html.Div(
-                                                            className='column_thirtythree_perc',
+                                                            className='column thirtythree_perc',
                                                             children=[
                                                                 dcc.Graph(id="histogram10")
                                                             ]
                                                         ),                                                      
                                                         html.Div(
-                                                            className='column_sixtysix_perc',
+                                                            className='column sixtysix_perc',
                                                             children=[
                                                                 dcc.Graph(id="histogram11")
+                                                            ]
+                                                        )
+                                                    ]
+                                                ),
+                                                html.Div(
+                                                    className='row',
+                                                    children=[
+                                                        html.Div(
+                                                            className='column fifty_perc',
+                                                            children=[
+                                                                dcc.Graph(id='histogram12')
                                                             ]
                                                         )
                                                     ]
@@ -287,11 +298,13 @@ def open_close_sidebar(n_clicks1, n_clicks2):
         dash.dependencies.Output('histogram3', 'figure'),
         dash.dependencies.Output('histogram4', 'figure'),
         dash.dependencies.Output('histogram5', 'figure'),
+        dash.dependencies.Output('histogram6', 'figure'),
         dash.dependencies.Output('histogram7', 'figure'),
         dash.dependencies.Output('histogram8', 'figure'),
         dash.dependencies.Output('histogram9', 'figure'),
         dash.dependencies.Output('histogram10', 'figure'),
         dash.dependencies.Output('histogram11', 'figure'),
+        dash.dependencies.Output('histogram12', 'figure'),
     ],
     [
         dash.dependencies.Input('crimetype-dropdown', 'value'),
@@ -301,15 +314,23 @@ def open_close_sidebar(n_clicks1, n_clicks2):
 )
 def update_map(crime_type, years, borough):
     n_of_records = 3
-    df_filtered, df_crimes_by_barrio, df_crimes_by_crimetype_and_year,\
-    df_crimes_by_localidad, df_crimes_by_localidad_and_year,\
-    df_crimes_by_localidad_weekday, df_crime_by_weekday,\
-    df_crimes_by_month, df_crimes_by_holiday, df_crimes_by_tipodow = filter_crime(df_crime, crime_type, years, borough)
+    df_filtered,\
+    df_crimes_by_barrio,\
+    df_crimes_by_crimetype_and_year,\
+    df_crimes_by_crimetype_and_localidad,\
+    df_crimes_by_localidad,\
+    df_crimes_by_localidad_and_year,\
+    df_crimes_by_localidad_weekday,\
+    df_crime_by_weekday,\
+    df_crimes_by_month,\
+    df_crimes_by_holiday,\
+    df_crimes_by_tipodow = filter_crime(df_crime, crime_type, years, borough)
     
     return create_map(df_filtered),\
            create_line_chart_by_crimetype_and_year( df_crimes_by_crimetype_and_year ),\
            create_bar_chart_by_localidad( df_crimes_by_localidad ),\
            create_line_chart_by_localidad_and_year( df_crimes_by_localidad_and_year ),\
+           create_bar_chart_crimestype_by_localidad( df_crimes_by_crimetype_and_localidad, n_of_records ),\
            create_bar_chart_top_barrios_total_crimen( df_crimes_by_barrio, n_of_records ),\
            create_bar_chart_top_barrios_by_ratio( df_crimes_by_barrio, n_of_records ),\
            create_bar_chart_crimes_by_localidad_and_weekday( df_crimes_by_localidad_weekday ),\
@@ -317,7 +338,8 @@ def update_map(crime_type, years, borough):
            create_bar_char_crimes_by_tipodow( df_crimes_by_tipodow ),\
            create_bar_chart_crimes_by_month( df_crimes_by_month ),\
            create_bar_char_crimes_by_holiday( df_crimes_by_holiday ),\
-           create_heatmap(df_filtered)
+           create_heatmap_hora_dow(df_filtered),\
+           create_heatmap_festividad_localidad(df_filtered)
             
 
 def create_map( df ):
@@ -367,7 +389,7 @@ def create_line_chart_by_crimetype_and_year( df ):
 
     return {
         'data' : data,
-        'layout': getLayout('Crimenes a lo largo del tiempo', tick_mode='auto')
+        'layout': getLayout('Crimenes a lo largo del tiempo', xtickmode='auto')
     }
 
 def create_line_chart_by_localidad_and_year( df ):
@@ -386,16 +408,32 @@ def create_line_chart_by_localidad_and_year( df ):
 
     return {
         'data' : data,
-        'layout': getLayout('Crimenes por localidad a través del tiempo', tick_angle=-90)
+        'layout': getLayout('Crimenes por localidad a través del tiempo', xtickangle=-90)
     }
 
+def create_bar_chart_crimestype_by_localidad( df, n_of_records ):
+    data = []
+    localidad_lst = list(set(df["localidad"]))
+
+    for loc in localidad_lst:
+        df_tmp = df[df['localidad']==loc]
+        #df_tmp['perc'] = (df_tmp['total'] / df_tmp['total'].sum())
+        df_tmp['perc'] = df_tmp.apply( lambda row: row['total'] / df[(df['crimen'] == row['crimen'])]['total'].sum(), axis=1)
+        df_tmp = df_tmp.sort_values(by='perc', ascending=False)
+        data.append(go.Bar(x=df_tmp['crimen'], y=df_tmp['perc'], name=loc ))
+
+
+    return {
+        'data' : data,
+        'layout' : getLayout('Tipo de crimen por localidad', xtickangle=-90, ytickformat=',.0%', bar_mode='stack')
+    }
 
 def create_bar_chart_crimes_by_localidad_and_weekday( df ):
     data = []
 
     df['nombre_dia_semana'] = df['dia_semana'].apply( lambda field: DAYS_OF_THE_WEEK[int(field)] )
     
-    localidad_lst = list(set(df["localidad"]))
+    localidad_lst = list(set(df["localidad"]))  
     for loc in localidad_lst:
         data.append(go.Bar(x=df[df['localidad']==loc]['nombre_dia_semana'], y=df[df['localidad']==loc]['total'], name=loc))
 
@@ -427,7 +465,7 @@ def create_bar_chart_crimes_by_month( df ):
 
     return {
         'data' : data,
-        'layout': getLayout('Crimenes por mes', tick_angle=-90)
+        'layout': getLayout('Crimenes por mes', xtickangle=-90)
     }
 
 def create_bar_char_crimes_by_holiday( df ):
@@ -438,7 +476,7 @@ def create_bar_char_crimes_by_holiday( df ):
 
     return {
         'data' : data,
-        'layout': getLayout('Crimenes Días Feriados', tick_angle=-90)
+        'layout': getLayout('Crimenes Días Feriados', xtickangle=-90)
     }
 
 
@@ -472,7 +510,7 @@ def create_bar_chart_top_barrios_total_crimen(df, n_of_records):
 
     return {
         'data': data,
-        'layout': getLayout(f'Total crimenes Barrios x Localidad (Top {n_of_records})', tick_angle=-90)
+        'layout': getLayout(f'Total crimenes Barrios x Localidad (Top {n_of_records})', xtickangle=-90)
     }
 
 def create_bar_chart_top_barrios_by_ratio(df, n_of_records):
@@ -484,29 +522,19 @@ def create_bar_chart_top_barrios_by_ratio(df, n_of_records):
 
     return {
         'data': data,
-        'layout': getLayout(f'Ratio crimen por población Barrios x Localidad (Top {n_of_records})', tick_angle=-90)
+        'layout': getLayout(f'Ratio crimen por población Barrios x Localidad (Top {n_of_records})', xtickangle=-90)
     }
 
-
-def create_heatmap(df):
+def create_heatmap_hora_dow(df):
     df["fecha_hora"] = df["fecha_hora"].apply(lambda x: dt.strptime(x, "%Y-%m-%d %H:%M:%S"))  # String -> Datetime
     df["date_horaampm"] = df["fecha_hora"].apply(lambda x: dt.strftime(x, "%I %p"))  # Datetime -> int(hour) + AM/PM
-    df["date_dow"] = df["fecha_hora"].apply(lambda x: dt.strftime(x, "%A"))  # Datetime -> weekday string
 
     df['numero_crimenes'] = 1
     df = df.sort_values('fecha_hora').set_index('fecha_hora')
     
 
     x_axis = [datetime.time(i).strftime("%I %p") for i in range(24)]  # 24hr time list
-    y_axis = [
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday",
-                "Saturday",
-                "Sunday",
-            ]
+    y_axis = DAYS_OF_THE_WEEK
 
     # Get z value : sum(number of records) based on x, y,
 
@@ -514,7 +542,8 @@ def create_heatmap(df):
     annotations = []
 
     for ind_y, day in enumerate(y_axis):
-        filtered_day = df[df['date_dow'] == day]
+        #filtered_day = df[df['date_dow'] == day]
+        filtered_day = df[df['date_dow'] == ind_y]
 
         for ind_x, x_val in enumerate(x_axis):
             sum_of_record = filtered_day[filtered_day["date_horaampm"] == x_val][
@@ -535,7 +564,7 @@ def create_heatmap(df):
             annotations.append(annotation_dict)
 
     # Heatmap
-    hovertemplate = "<b> %{y}  %{x} <br><br> %{z} crimenes"
+    hovertemplate = "<b> %{y}  %{x} <br><br> %{z} incidentes"
 
     data = [
         dict(
@@ -546,30 +575,98 @@ def create_heatmap(df):
             name="",
             hovertemplate=hovertemplate,
             showscale=False,
-            colorscale=[[0, "#76858a"], [1, "#2c82ff"]],
+            colorscale=[[0, "#5DBCD2"], [1, "#002963"]],
         )
     ]
 
     layout = dict(
-        margin=dict(l=70, b=50, t=50, r=50),
-        plot_bgcolor='#323130',
-        paper_bgcolor='#323130',        
-        modebar={"orientation": "v"},
-        font=dict(family="Open Sans", color='#FFFFFF'),
-        annotations=annotations,
-        xaxis=dict(
-            side="top",
-            ticks="",
-            ticklen=2,
-            tickfont=dict(family="sans-serif"),
-            tickcolor="#FFFFFF",
-        ),
-        yaxis=dict(
-            side="left", ticks="", tickfont=dict(family="sans-serif"), ticksuffix=" "
-        ),
-        hovermode="closest",
-        showlegend=False
-    )
+                margin=dict(l=70, b=50, t=50, r=50),
+                plot_bgcolor='#323130',
+                paper_bgcolor='#323130',        
+                modebar={"orientation": "v"},
+                font=dict(family="Open Sans", color='#FFFFFF'),
+                annotations=annotations,
+                xaxis=dict(
+                    side="top",
+                    ticks="",
+                    ticklen=2,
+                    tickfont=dict(family="sans-serif"),
+                    tickcolor="#FFFFFF",
+                ),
+                yaxis=dict(
+                    side="left", ticks="", tickfont=dict(family="sans-serif"), ticksuffix=" "
+                ),
+                hovermode="closest",
+                showlegend=True
+            )
+    return {"data": data, "layout": layout}
+
+
+def create_heatmap_festividad_localidad(df):
+    df['numero_crimenes'] = 1
+    #df = df.sort_values('fecha_hora').set_index('fecha_hora')
+    
+    x_axis = list(set(df['crimen']))
+    y_axis = list(set(df['localidad']))
+
+    z = np.zeros((len(y_axis), len(x_axis)))
+    annotations = []
+
+    for ind_y, loc in enumerate(y_axis):
+        filtered_loc = df[df['localidad'] == loc]
+
+        for ind_x, x_val in enumerate(x_axis):
+            sum_of_record = filtered_loc[filtered_loc["crimen"] == x_val]['numero_crimenes'].sum()
+            z[ind_y][ind_x] = sum_of_record
+
+            annotation_dict = dict(
+                showarrow=False,
+                text="<b>" + str(sum_of_record) + "<b>",
+                xref="x",
+                yref="y",
+                x=x_val,
+                y=loc,
+                font=dict(family="sans-serif"),
+            )
+
+            annotations.append(annotation_dict)
+
+    # Heatmap
+    hovertemplate = "<b> %{y}  %{x} <br><br> %{z} incidentes"
+
+    data = [
+        dict(
+            x=x_axis,
+            y=y_axis,
+            z=z,
+            type="heatmap",
+            name="",
+            hovertemplate=hovertemplate,
+            showscale=False,
+            colorscale=[[0, "#5DBCD2"], [1, "#002963"]],
+        )
+    ]
+
+    layout = dict(
+                margin=dict(l=70, b=50, t=50, r=50),
+                plot_bgcolor='#323130',
+                paper_bgcolor='#323130',        
+                modebar={"orientation": "v"},
+                font=dict(family="Open Sans", color='#FFFFFF'),
+                annotations=annotations,
+                xaxis=dict(
+                    side="top",
+                    ticks="",
+                    ticklen=2,
+                    tickfont=dict(family="sans-serif"),
+                    tickcolor="#FFFFFF",
+                ),
+                yaxis=dict(
+                    side="left", ticks="", tickfont=dict(family="sans-serif"), ticksuffix=" "
+                ),
+                hovermode="closest",
+                showlegend=True
+            )
     return {"data": data, "layout": layout}
 
 
