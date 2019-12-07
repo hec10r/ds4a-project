@@ -270,6 +270,10 @@
     clear: both;
   }
 
+  .hundred_perc {
+    width:100%;
+  }
+
   .fifty_perc {
     width: 50%;
   }
