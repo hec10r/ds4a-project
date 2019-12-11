@@ -1,7 +1,6 @@
 from db_functions import *
 
 
-
 app = dash.Dash(
     __name__, meta_tags=[{"name": "viewport", "content": "width=device-width"}]
 )
@@ -404,7 +403,7 @@ def create_line_chart_by_crimetype_and_year( df ):
 
     return {
         'data' : data,
-        'layout': get_layout('Crimenes a lo largo del tiempo', margin=dict(l=50, b=50, t=50, r=10), xtickmode='auto')
+        'layout': get_layout('Número de crímenes en el tiempo', margin=dict(l=50, b=50, t=50, r=10), xtickmode='auto')
     }
 
 def create_bar_chart_by_localidad( df ):
@@ -413,7 +412,7 @@ def create_bar_chart_by_localidad( df ):
         'data': [
             {'x': df['localidad'], 'y': df['total'], 'type': 'bar'}
         ],
-        'layout': get_layout('Crimenes por localidades', margin=dict(l=20, b=50, t=80, r=10), xtickangle=0)
+        'layout': get_layout('Crímenes por localidad', margin=dict(l=20, b=50, t=80, r=10), xtickangle=0)
     }
 
 def create_line_chart_by_localidad_and_year( df ):
@@ -426,7 +425,7 @@ def create_line_chart_by_localidad_and_year( df ):
 
     return {
         'data' : data,
-        'layout': get_layout('Crimenes por localidad a través del tiempo', margin=dict(l=50, b=50, t=80, r=10), xtickmode='auto')
+        'layout': get_layout('Número de crímenes por localidad', margin=dict(l=50, b=50, t=80, r=10), xtickmode='auto')
     }
 
 
@@ -434,7 +433,7 @@ def create_heatmap_crimen_localidad(df):
     x_axis = sorted(list(set(df['localidad'])), reverse=False)
     y_axis = sorted(list(set(df['crimen'])), reverse=True)
 
-    return create_heatmap(  df, x_axis, y_axis, 'localidad', 'crimen', dict(l=200, b=5, t=120, r=10), title='Crimenes vs Localidad - Heatmap', xtickangle=0 )
+    return create_heatmap(  df, x_axis, y_axis, 'localidad', 'crimen', dict(l=200, b=5, t=120, r=10), title='Mapa de calor crímenes-localidad', xtickangle=0 )
 
 def create_bar_chart_crimestype_by_localidad( df ):
     data = []
@@ -450,7 +449,7 @@ def create_bar_chart_crimestype_by_localidad( df ):
 
     return {
         'data' : data,
-        'layout' : get_layout('Crimenes vs Localidad - %', margin=dict(l=215, b=20, t=80, r=10), xtickformat=',.0%', bar_mode='stack')
+        'layout' : get_layout('Distribución de crímenes según localidad', margin=dict(l=215, b=20, t=80, r=10), xtickformat=',.0%', bar_mode='stack')
     }
 
 
@@ -464,7 +463,7 @@ def create_bar_chart_top_barrios_total_crimen(df, n_of_records):
 
     return {
         'data': data,
-        'layout': get_layout(f'Barrios con más crimenes por Localidad (Top {n_of_records})', margin=dict(l=50, b=150, t=80, r=10), xtickangle=-90)
+        'layout': get_layout(f'Barrios con más crímenes según localidad (Top {n_of_records})', margin=dict(l=50, b=150, t=80, r=10), xtickangle=-90)
     }
 
 
@@ -477,7 +476,7 @@ def create_bar_chart_top_barrios_by_ratio(df, n_of_records):
 
     return {
         'data': data,
-        'layout': get_layout(f'Ratio de crimen por población por barrios y Localidad (Top {n_of_records})', margin=dict(l=50, b=150, t=80, r=10), xtickangle=-90)
+        'layout': get_layout(f'Ratio de crimen según densidad poblacional', margin=dict(l=50, b=150, t=80, r=10), xtickangle=-90)
     }
 
 
@@ -490,21 +489,21 @@ def create_bar_chart_crimes_by_weekday( df ):
 
     return {
         'data' : data,
-        'layout': get_layout('Crimenes por día de la semana', margin=dict(l=50, b=110, t=80, r=10))
+        'layout': get_layout('Crímenes por día de la semana', margin=dict(l=50, b=110, t=80, r=10))
     }
 
 def create_heatmap_hora_dow(df):
     x_axis = [datetime.time(i).strftime("%I %p") for i in range(24)]  # 24hr time list 
     y_axis = DAYS_OF_THE_WEEK
 
-    return create_heatmap(  df=df, x_axis=x_axis, y_axis=y_axis, x_column_name='date_horaampm', y_column_name='date_dow', margin=dict(l=70, b=50, t=100, r=50), y_index=True, title='Días de la semana vs Horas')
+    return create_heatmap(  df=df, x_axis=x_axis, y_axis=y_axis, x_column_name='date_horaampm', y_column_name='date_dow', margin=dict(l=70, b=50, t=100, r=50), y_index=True, title='Crímenes día de la semana y hora')
 
 
 def create_heatmap_localidad_dow(df):
     x_axis = sorted(list(set(df['localidad'])), reverse=False)
     y_axis = DAYS_OF_THE_WEEK
 
-    return create_heatmap(  df=df, x_axis=x_axis, y_axis=y_axis, x_column_name='localidad', y_column_name='date_dow', margin=dict(l=70, b=50, t=50, r=50), y_index=True, title='Crimenes por localidad y día de semana', xtickangle=0)
+    return create_heatmap(  df=df, x_axis=x_axis, y_axis=y_axis, x_column_name='localidad', y_column_name='date_dow', margin=dict(l=70, b=50, t=50, r=50), y_index=True, title='Crímenes por día de la semana y localidad', xtickangle=0)
 
 #=============TAB 3========================
 def create_bar_chart_crimes_by_month( df ):
@@ -515,28 +514,28 @@ def create_bar_chart_crimes_by_month( df ):
 
     return {
         'data' : data,
-        'layout': get_layout('Crimenes por mes', margin=dict(l=50, b=110, t=80, r=10), xtickangle=-90)
+        'layout': get_layout('Crímenes por mes', margin=dict(l=50, b=110, t=80, r=10), xtickangle=-90)
     }
 
 def create_heatmap_festividad_hora(df):
     x_axis = [datetime.time(i).strftime("%I %p") for i in range(24)]  # 24hr time list
     y_axis = sorted([y for y in list(set(df['festividad'])) if str(y) != 'nan'], reverse=True)
 
-    return create_heatmap(  df, x_axis, y_axis, 'date_horaampm', 'festividad', dict(l=220, b=10, t=180, r=10), height=800, title='Festividad vs Horas del día', xtickangle=-90)
+    return create_heatmap(  df, x_axis, y_axis, 'date_horaampm', 'festividad', dict(l=220, b=10, t=180, r=10), height=800, title='Crímenes por festividad y hora', xtickangle=-90)
 
 def create_heatmap_festividad_localidad(df):
     x_axis = sorted(list(set(df['localidad'])), reverse=False)
     y_axis = sorted([y for y in list(set(df['festividad'])) if str(y) != 'nan'], reverse=True)
     
     
-    return create_heatmap(  df, x_axis, y_axis, 'localidad', 'festividad', dict(l=220, b=10, t=150, r=25), height=800, title='Festividad vs Localidad', xtickangle=0 )
+    return create_heatmap(  df, x_axis, y_axis, 'localidad', 'festividad', dict(l=220, b=10, t=150, r=25), height=800, title='Crímenes por festividad y localidad', xtickangle=0 )
 
 
 def create_heatmap_festividad_crimen(df):
     x_axis = sorted(list(set(df['crimen'])), reverse=False)
     y_axis = sorted([y for y in list(set(df['festividad'])) if str(y) != 'nan'], reverse=True)
     
-    return create_heatmap(  df, x_axis, y_axis, 'crimen', 'festividad', dict(l=250, b=10, t=280, r=25), height=800, title='Festividades vs Crimenes', xtickangle=-45 )
+    return create_heatmap(  df, x_axis, y_axis, 'crimen', 'festividad', dict(l=250, b=10, t=280, r=25), height=800, title='Festividades vs Crímenes', xtickangle=-45 )
 
 
 if __name__ == "__main__":
